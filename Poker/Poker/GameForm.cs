@@ -244,7 +244,7 @@ namespace Poker
 
             for (int index = GameConstants.FirstBoardCardIndex; index < GameConstants.AllCardsInGame; index++)
             {
-                DealBoardCard(index, horizontal, vertical, backImage);
+                DealBoardCards(index, horizontal, vertical, backImage);
 
                 horizontal += GameConstants.BoardCardsOffset;
 
@@ -375,7 +375,7 @@ namespace Poker
             }
         }
 
-        private void DealBoardCard(int index, int horizontal, int vertical, Image cardImage)
+        private void DealBoardCards(int index, int horizontal, int vertical, Image cardImage)
         {
             cardImageHolder[index].Tag = Reserve[index];
             cardImageHolder[index].Anchor = AnchorStyles.None;
