@@ -15,8 +15,7 @@ using Poker.Models;
 
 namespace Poker
 {
-
-    public partial class Form1 : Form
+    public partial class GameForm : Form
     {
         #region Variables
         ProgressBar progressBar = new ProgressBar();
@@ -34,7 +33,7 @@ namespace Poker
         private double type;
         private double rounds = 0;
         private double Raise = 0;
-        
+
         bool Pturn = true, B1turn = false, B2turn = false, B3turn = false, B4turn = false, B5turn = false;
         bool PFturn = false, B1Fturn = false, B2Fturn = false, B3Fturn = false, B4Fturn = false, B5Fturn = false;
         bool pFolded, b1Folded, b2Folded, b3Folded, b4Folded, b5Folded;
@@ -91,7 +90,7 @@ namespace Poker
 
         #endregion
 
-        public Form1()
+        public GameForm()
         {
             //allPlayersIsActiveCollection.Add(PFturn); allPlayersIsActiveCollection.Add(B1Fturn); allPlayersIsActiveCollection.Add(B2Fturn); allPlayersIsActiveCollection.Add(B3Fturn); allPlayersIsActiveCollection.Add(B4Fturn); allPlayersIsActiveCollection.Add(B5Fturn);
             call = bigBlind;
@@ -136,11 +135,11 @@ namespace Poker
 
         async Task Shuffle()
         {
-            allPlayersIsActiveCollection.Add(PFturn); 
-            allPlayersIsActiveCollection.Add(B1Fturn); 
-            allPlayersIsActiveCollection.Add(B2Fturn); 
-            allPlayersIsActiveCollection.Add(B3Fturn); 
-            allPlayersIsActiveCollection.Add(B4Fturn); 
+            allPlayersIsActiveCollection.Add(PFturn);
+            allPlayersIsActiveCollection.Add(B1Fturn);
+            allPlayersIsActiveCollection.Add(B2Fturn);
+            allPlayersIsActiveCollection.Add(B3Fturn);
+            allPlayersIsActiveCollection.Add(B4Fturn);
             allPlayersIsActiveCollection.Add(B5Fturn);
 
             buttonCall.Enabled = false;
@@ -149,12 +148,11 @@ namespace Poker
             buttonCheck.Enabled = false;
             MaximizeBox = false;
             MinimizeBox = false;
-            bool check = false;
             Bitmap backImage = new Bitmap("Assets\\Back\\Back.png");
             int horizontal = 580, vertical = 480;
             this.CardDeckInit();
 
-            for (i = 0; i < 17; i++)
+            for (i = 0; i < GameConstants.AllCardsInGame; i++)
             {
                 cardDeck[i] = Image.FromFile(CardImagePaths[i]);
                 var charsToRemove = new string[] { "Assets\\Cards\\", ".png" };
@@ -170,320 +168,177 @@ namespace Poker
                 cardImageHolder[i].Width = 80;
                 this.Controls.Add(cardImageHolder[i]);
                 cardImageHolder[i].Name = "pb" + i.ToString();
-                await Task.Delay(200);
+                // await Task.Delay(200);
+            }
 
-                #region Throwing Cards
-                if (i < 2)
+            for (int index = 0; index < GameConstants.NumberOfPlayerCards; index += 2)
+            {
+                if (index < 2)
                 {
-                    if (cardImageHolder[0].Tag != null)
-                    {
-                        cardImageHolder[1].Tag = Reserve[1];
-                    }
-                    cardImageHolder[0].Tag = Reserve[0];
-                    cardImageHolder[i].Image = cardDeck[i];
-                    cardImageHolder[i].Anchor = (AnchorStyles.Bottom);
-                    //cardImageHolder[i].Dock = DockStyle.Top;
-                    cardImageHolder[i].Location = new Point(horizontal, vertical);
-                    horizontal += cardImageHolder[i].Width;
-                    this.Controls.Add(player.Panel);
-                    player.Panel.Location = new Point(cardImageHolder[0].Left - 10, cardImageHolder[0].Top - 10);
-                    //player.Panel.BackColor = Color.DarkBlue;
-                    //player.Panel.Height = 150;
-                    //player.Panel.Width = 180;
-                    player.Panel.Visible = false;
+                    DealCardsToCurrentPlayer(player, index, horizontal, vertical, AnchorStyles.Bottom);
                 }
+
                 if (bot1.Chips > 0)
                 {
                     foldedPlayers--;
-                    if (i >= 2 && i < 4)
+                    if (index >= 2 && index < 4)
                     {
-                        if (cardImageHolder[2].Tag != null)
-                        {
-                            cardImageHolder[3].Tag = Reserve[3];
-                        }
+                        horizontal = 15;
+                        vertical = 420;
 
-                        cardImageHolder[2].Tag = Reserve[2];
-                        if (!check)
-                        {
-                            horizontal = 15;
-                            vertical = 420;
-                        }
-
-                        check = true;
-                        cardImageHolder[i].Anchor = (AnchorStyles.Bottom | AnchorStyles.Left);
-                        cardImageHolder[i].Image = backImage;
-                        //cardImageHolder[i].Image = cardDeck[i];
-                        cardImageHolder[i].Location = new Point(horizontal, vertical);
-                        horizontal += cardImageHolder[i].Width;
-                        cardImageHolder[i].Visible = true;
-                        this.Controls.Add(bot1.Panel);
-                        bot1.Panel.Location = new Point(cardImageHolder[2].Left - 10, cardImageHolder[2].Top - 10);
-                        //b1Panel.BackColor = Color.DarkBlue;
-                        //b1Panel.Height = 150;
-                        //b1Panel.Width = 180;
-                        bot1.Panel.Visible = false;
-                        if (i == 3)
-                        {
-                            check = false;
-                        }
+                        DealCardsToCurrentPlayer(bot1, index, horizontal, vertical, AnchorStyles.Bottom, AnchorStyles.Left);
                     }
                 }
 
                 if (bot2.Chips > 0)
                 {
                     foldedPlayers--;
-                    if (i >= 4 && i < 6)
+                    if (index >= 4 && index < 6)
                     {
-                        if (cardImageHolder[4].Tag != null)
-                        {
-                            cardImageHolder[5].Tag = Reserve[5];
-                        }
-                        cardImageHolder[4].Tag = Reserve[4];
-                        if (!check)
-                        {
-                            horizontal = 75;
-                            vertical = 65;
-                        }
+                        horizontal = 75;
+                        vertical = 65;
 
-                        check = true;
-                        cardImageHolder[i].Anchor = (AnchorStyles.Top | AnchorStyles.Left);
-                        cardImageHolder[i].Image = backImage;
-                        //cardImageHolder[i].Image = cardDeck[i];
-                        cardImageHolder[i].Location = new Point(horizontal, vertical);
-                        horizontal += cardImageHolder[i].Width;
-                        cardImageHolder[i].Visible = true;
-                        this.Controls.Add(bot2.Panel);
-                        bot2.Panel.Location = new Point(cardImageHolder[4].Left - 10, cardImageHolder[4].Top - 10);
-                        //b2Panel.BackColor = Color.DarkBlue;
-                        //b2Panel.Height = 150;
-                        //b2Panel.Width = 180;
-                        bot2.Panel.Visible = false;
-                        if (i == 5)
-                        {
-                            check = false;
-                        }
+                        DealCardsToCurrentPlayer(bot2, index, horizontal, vertical, AnchorStyles.Top, AnchorStyles.Left);
                     }
                 }
+
                 if (bot3.Chips > 0)
                 {
                     foldedPlayers--;
-                    if (i >= 6 && i < 8)
+                    if (index >= 6 && index < 8)
                     {
-                        if (cardImageHolder[6].Tag != null)
-                        {
-                            cardImageHolder[7].Tag = Reserve[7];
-                        }
-                        cardImageHolder[6].Tag = Reserve[6];
-                        if (!check)
-                        {
-                            horizontal = 590;
-                            vertical = 25;
-                        }
-                        check = true;
-                        cardImageHolder[i].Anchor = (AnchorStyles.Top);
-                        cardImageHolder[i].Image = backImage;
-                        //cardImageHolder[i].Image = cardDeck[i];
-                        cardImageHolder[i].Location = new Point(horizontal, vertical);
-                        horizontal += cardImageHolder[i].Width;
-                        cardImageHolder[i].Visible = true;
-                        this.Controls.Add(bot3.Panel);
-                        bot3.Panel.Location = new Point(cardImageHolder[6].Left - 10, cardImageHolder[6].Top - 10);
-                        //b3Panel.BackColor = Color.DarkBlue;
-                        //b3Panel.Height = 150;
-                        //b3Panel.Width = 180;
-                        bot3.Panel.Visible = false;
-                        if (i == 7)
-                        {
-                            check = false;
-                        }
+                        horizontal = 590;
+                        vertical = 25;
+
+                        DealCardsToCurrentPlayer(bot3, index, horizontal, vertical, AnchorStyles.Top);
                     }
                 }
+
                 if (bot4.Chips > 0)
                 {
                     foldedPlayers--;
-                    if (i >= 8 && i < 10)
+                    if (index >= 8 && index < 10)
                     {
-                        if (cardImageHolder[8].Tag != null)
-                        {
-                            cardImageHolder[9].Tag = Reserve[9];
-                        }
-                        cardImageHolder[8].Tag = Reserve[8];
-                        if (!check)
-                        {
-                            horizontal = 1115;
-                            vertical = 65;
-                        }
-                        check = true;
-                        cardImageHolder[i].Anchor = (AnchorStyles.Top | AnchorStyles.Right);
-                        cardImageHolder[i].Image = backImage;
-                        //cardImageHolder[i].Image = cardDeck[i];
-                        cardImageHolder[i].Location = new Point(horizontal, vertical);
-                        horizontal += cardImageHolder[i].Width;
-                        cardImageHolder[i].Visible = true;
-                        this.Controls.Add(bot4.Panel);
-                        bot4.Panel.Location = new Point(cardImageHolder[8].Left - 10, cardImageHolder[8].Top - 10);
-                        //b4Panel.BackColor = Color.DarkBlue;
-                        //b4Panel.Height = 150;
-                        //b4Panel.Width = 180;
-                        bot4.Panel.Visible = false;
-                        if (i == 9)
-                        {
-                            check = false;
-                        }
+                        horizontal = 1115;
+                        vertical = 65;
+
+                        DealCardsToCurrentPlayer(bot4, index, horizontal, vertical, AnchorStyles.Top, AnchorStyles.Right);
                     }
                 }
+
                 if (bot5.Chips > 0)
                 {
                     foldedPlayers--;
-                    if (i >= 10 && i < 12)
+                    if (index >= 10 && index < 12)
                     {
-                        if (cardImageHolder[10].Tag != null)
-                        {
-                            cardImageHolder[11].Tag = Reserve[11];
-                        }
-                        cardImageHolder[10].Tag = Reserve[10];
-                        if (!check)
-                        {
-                            horizontal = 1160;
-                            vertical = 420;
-                        }
-                        check = true;
-                        cardImageHolder[i].Anchor = (AnchorStyles.Bottom | AnchorStyles.Right);
-                        cardImageHolder[i].Image = backImage;
-                        //cardImageHolder[i].Image = cardDeck[i];
-                        cardImageHolder[i].Location = new Point(horizontal, vertical);
-                        horizontal += cardImageHolder[i].Width;
-                        cardImageHolder[i].Visible = true;
-                        this.Controls.Add(bot5.Panel);
-                        bot5.Panel.Location = new Point(cardImageHolder[10].Left - 10, cardImageHolder[10].Top - 10);
-                        //b5Panel.BackColor = Color.DarkBlue;
-                        //b5Panel.Height = 150;
-                        //b5Panel.Width = 180;
-                        bot5.Panel.Visible = false;
-                        if (i == 11)
-                        {
-                            check = false;
-                        }
-                    }
-                }
-                if (i >= 12)
-                {
-                    cardImageHolder[12].Tag = Reserve[12];
-                    if (i > 12) cardImageHolder[13].Tag = Reserve[13];
-                    if (i > 13) cardImageHolder[14].Tag = Reserve[14];
-                    if (i > 14) cardImageHolder[15].Tag = Reserve[15];
-                    if (i > 15)
-                    {
-                        cardImageHolder[16].Tag = Reserve[16];
+                        horizontal = 1160;
+                        vertical = 420;
 
-                    }
-                    if (!check)
-                    {
-                        horizontal = 410;
-                        vertical = 265;
-                    }
-                    check = true;
-                    if (cardImageHolder[i] != null)
-                    {
-                        cardImageHolder[i].Anchor = AnchorStyles.None;
-                        cardImageHolder[i].Image = backImage;
-                        //cardImageHolder[i].Image = cardDeck[i];
-                        cardImageHolder[i].Location = new Point(horizontal, vertical);
-                        horizontal += 110;
+                        DealCardsToCurrentPlayer(bot5, index, horizontal, vertical, AnchorStyles.Bottom, AnchorStyles.Right);
                     }
                 }
-                #endregion
-                if (bot1.Chips <= 0)
-                {
-                    B1Fturn = true;
-                    cardImageHolder[2].Visible = false;
-                    cardImageHolder[3].Visible = false;
-                }
-                else
-                {
-                    B1Fturn = false;
-                    if (i == 3)
-                    {
-                        if (cardImageHolder[3] != null)
-                        {
-                            cardImageHolder[2].Visible = true;
-                            cardImageHolder[3].Visible = true;
-                        }
-                    }
-                }
-                if (bot2.Chips <= 0)
-                {
-                    B2Fturn = true;
-                    cardImageHolder[4].Visible = false;
-                    cardImageHolder[5].Visible = false;
-                }
-                else
-                {
-                    B2Fturn = false;
-                    if (i == 5)
-                    {
-                        if (cardImageHolder[5] != null)
-                        {
-                            cardImageHolder[4].Visible = true;
-                            cardImageHolder[5].Visible = true;
-                        }
-                    }
-                }
-                if (bot3.Chips <= 0)
-                {
-                    B3Fturn = true;
-                    cardImageHolder[6].Visible = false;
-                    cardImageHolder[7].Visible = false;
-                }
-                else
-                {
-                    B3Fturn = false;
-                    if (i == 7)
-                    {
-                        if (cardImageHolder[7] != null)
-                        {
-                            cardImageHolder[6].Visible = true;
-                            cardImageHolder[7].Visible = true;
-                        }
-                    }
-                }
-                if (bot4.Chips <= 0)
-                {
-                    B4Fturn = true;
-                    cardImageHolder[8].Visible = false;
-                    cardImageHolder[9].Visible = false;
-                }
-                else
-                {
-                    B4Fturn = false;
-                    if (i == 9)
-                    {
-                        if (cardImageHolder[9] != null)
-                        {
-                            cardImageHolder[8].Visible = true;
-                            cardImageHolder[9].Visible = true;
-                        }
-                    }
-                }
-                if (bot5.Chips <= 0)
-                {
-                    B5Fturn = true;
-                    cardImageHolder[10].Visible = false;
-                    cardImageHolder[11].Visible = false;
-                }
-                else
-                {
-                    B5Fturn = false;
-                    if (i == 11)
-                    {
-                        if (cardImageHolder[11] != null)
-                        {
-                            cardImageHolder[10].Visible = true;
-                            cardImageHolder[11].Visible = true;
-                        }
-                    }
-                }
-                if (i == 16)
+            }
+
+            horizontal = 410;
+            vertical = 265;
+
+            for (int index = GameConstants.FirstBoardCardIndex; index < GameConstants.AllCardsInGame; index++)
+            {
+                DealBoardCard(index, horizontal, vertical, backImage);
+
+                horizontal += GameConstants.BoardCardsOffset;
+
+                //if (bot1.Chips <= 0)
+                //{
+                //    B1Fturn = true;
+                //    cardImageHolder[2].Visible = false;
+                //    cardImageHolder[3].Visible = false;
+                //}
+                //else
+                //{
+                //    B1Fturn = false;
+                //    if (i == 3)
+                //    {
+                //        if (cardImageHolder[3] != null)
+                //        {
+                //            cardImageHolder[2].Visible = true;
+                //            cardImageHolder[3].Visible = true;
+                //        }
+                //    }
+                //}
+                //if (bot2.Chips <= 0)
+                //{
+                //    B2Fturn = true;
+                //    cardImageHolder[4].Visible = false;
+                //    cardImageHolder[5].Visible = false;
+                //}
+                //else
+                //{
+                //    B2Fturn = false;
+                //    if (i == 5)
+                //    {
+                //        if (cardImageHolder[5] != null)
+                //        {
+                //            cardImageHolder[4].Visible = true;
+                //            cardImageHolder[5].Visible = true;
+                //        }
+                //    }
+                //}
+                //if (bot3.Chips <= 0)
+                //{
+                //    B3Fturn = true;
+                //    cardImageHolder[6].Visible = false;
+                //    cardImageHolder[7].Visible = false;
+                //}
+                //else
+                //{
+                //    B3Fturn = false;
+                //    if (i == 7)
+                //    {
+                //        if (cardImageHolder[7] != null)
+                //        {
+                //            cardImageHolder[6].Visible = true;
+                //            cardImageHolder[7].Visible = true;
+                //        }
+                //    }
+                //}
+                //if (bot4.Chips <= 0)
+                //{
+                //    B4Fturn = true;
+                //    cardImageHolder[8].Visible = false;
+                //    cardImageHolder[9].Visible = false;
+                //}
+                //else
+                //{
+                //    B4Fturn = false;
+                //    if (i == 9)
+                //    {
+                //        if (cardImageHolder[9] != null)
+                //        {
+                //            cardImageHolder[8].Visible = true;
+                //            cardImageHolder[9].Visible = true;
+                //        }
+                //    }
+                //}
+                //if (bot5.Chips <= 0)
+                //{
+                //    B5Fturn = true;
+                //    cardImageHolder[10].Visible = false;
+                //    cardImageHolder[11].Visible = false;
+                //}
+                //else
+                //{
+                //    B5Fturn = false;
+                //    if (i == 11)
+                //    {
+                //        if (cardImageHolder[11] != null)
+                //        {
+                //            cardImageHolder[10].Visible = true;
+                //            cardImageHolder[11].Visible = true;
+                //        }
+                //    }
+                //}
+                if (index == 16)
                 {
                     if (!restart)
                     {
@@ -493,6 +348,7 @@ namespace Poker
                     timer.Start();
                 }
             }
+
             if (foldedPlayers == 5)
             {
                 DialogResult dialogResult = MessageBox.Show("Would You Like To Play Again ?", "You Won , Congratulations ! ", MessageBoxButtons.YesNo);
@@ -517,6 +373,26 @@ namespace Poker
                 buttonRaise.Enabled = true;
                 buttonFold.Enabled = true;
             }
+        }
+
+        private void DealBoardCard(int index, int horizontal, int vertical, Image cardImage)
+        {
+            cardImageHolder[index].Tag = Reserve[index];
+            cardImageHolder[index].Anchor = AnchorStyles.None;
+            cardImageHolder[index].Image = cardImage;
+            cardImageHolder[index].Location = new Point(horizontal, vertical);
+        }
+
+        private void DealCardsToCurrentPlayer(IPlayer currentPlayer, int cardIndex, int x, int y, AnchorStyles style1, AnchorStyles style2 = AnchorStyles.None)
+        {
+            cardImageHolder[cardIndex].Anchor = (style1 | style2);
+            currentPlayer.Card1 = new Card(x, y, cardDeck[cardIndex], Reserve[cardIndex], cardImageHolder[cardIndex]);
+            x += currentPlayer.Card1.CardHolder.Width;
+            cardImageHolder[cardIndex + 1].Anchor = (style1 | style2);
+            currentPlayer.Card2 = new Card(x, y, cardDeck[cardIndex + 1], Reserve[cardIndex + 1], cardImageHolder[cardIndex + 1]);
+            this.Controls.Add(currentPlayer.Panel);
+            currentPlayer.Panel.Location = new Point(currentPlayer.Card1.CardHolder.Left - 10, currentPlayer.Card1.CardHolder.Top - 10);
+            currentPlayer.Panel.Visible = false;
         }
 
         private void CardDeckInit()
@@ -2050,11 +1926,11 @@ namespace Poker
                         buttonRaise.Text = "Raise";
                     }
                 }
-                player.Panel.Visible = false; 
-                bot1.Panel.Visible = false; 
-                bot2.Panel.Visible = false; 
-                bot3.Panel.Visible = false; 
-                bot4.Panel.Visible = false; 
+                player.Panel.Visible = false;
+                bot1.Panel.Visible = false;
+                bot2.Panel.Visible = false;
+                bot3.Panel.Visible = false;
+                bot4.Panel.Visible = false;
                 bot5.Panel.Visible = false;
 
                 player.Call = 0; player.Raise = 0;
@@ -2069,13 +1945,13 @@ namespace Poker
                 CardImagePaths = Directory.GetFiles("Assets\\Cards", "*.png", SearchOption.TopDirectoryOnly);
                 allPlayersIsActiveCollection.Clear();
                 rounds = 0;
-                player.HandPower = 0; 
+                player.HandPower = 0;
                 player.HandType = -1;
-                type = 0; 
-                bot1.HandPower = 0; 
-                bot2.HandPower = 0; 
-                bot3.HandPower = 0; 
-                bot4.HandPower = 0; 
+                type = 0;
+                bot1.HandPower = 0;
+                bot2.HandPower = 0;
+                bot3.HandPower = 0;
+                bot4.HandPower = 0;
                 bot5.HandPower = 0;
                 bot1.HandType = -1;
                 bot2.HandType = -1;
@@ -2284,23 +2160,23 @@ namespace Poker
             {
                 FixWinners();
             }
-            player.Panel.Visible = false; 
-            bot1.Panel.Visible = false; 
-            bot2.Panel.Visible = false; 
-            bot3.Panel.Visible = false; 
-            bot4.Panel.Visible = false; 
+            player.Panel.Visible = false;
+            bot1.Panel.Visible = false;
+            bot2.Panel.Visible = false;
+            bot3.Panel.Visible = false;
+            bot4.Panel.Visible = false;
             bot5.Panel.Visible = false;
             call = bigBlind; Raise = 0;
             foldedPlayers = 5;
-            type = 0; 
+            type = 0;
             rounds = 0;
             bot1.HandPower = 0;
             bot2.HandPower = 0;
-            bot3.HandPower = 0; 
+            bot3.HandPower = 0;
             bot4.HandPower = 0;
-            bot5.HandPower = 0; 
-            player.HandPower = 0; 
-            player.HandType = -1; 
+            bot5.HandPower = 0;
+            player.HandPower = 0;
+            player.HandType = -1;
             Raise = 0;
             bot1.HandType = -1;
             bot2.HandType = -1;

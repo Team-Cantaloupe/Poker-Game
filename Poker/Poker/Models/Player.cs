@@ -44,5 +44,9 @@
         public int Call { get; set; }
 
         public int Raise { get; set; }
+
+        public Card Card1 { get; set; }
+
+        public Card Card2 { get; set; }
     }
 }

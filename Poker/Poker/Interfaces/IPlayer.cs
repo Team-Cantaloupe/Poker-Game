@@ -1,5 +1,6 @@
 ﻿namespace Poker.Interfaces
 {
+    using Poker.Models;
     using System.Windows.Forms;
 
     public interface IPlayer
@@ -19,5 +20,9 @@
         int Call { get; set; }
 
         int Raise { get; set; }
+
+        Card Card1 { get; set; }
+
+        Card Card2 { get; set; }
     }
 }
