@@ -168,7 +168,7 @@ namespace Poker
                 cardImageHolder[i].Width = 80;
                 this.Controls.Add(cardImageHolder[i]);
                 cardImageHolder[i].Name = "pb" + i.ToString();
-                // await Task.Delay(200);
+                //await Task.Delay(100);
             }
 
             for (int index = 0; index < GameConstants.NumberOfPlayerCards; index += 2)
