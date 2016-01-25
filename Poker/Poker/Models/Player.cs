@@ -1,4 +1,7 @@
-﻿namespace Poker.Models
+﻿using System;
+using System.Windows.Forms.VisualStyles;
+
+namespace Poker.Models
 {
     using System.Windows.Forms;
     using System.Drawing;
@@ -14,7 +17,9 @@
         private const int CardPanelWidth = 180;
         private const int CardPanelHeight = 150;
 
-        protected Player()
+        private Label status;
+
+        protected Player(Label status)
         {
             this.Panel = new Panel
             {
@@ -26,8 +31,8 @@
             this.HandPower = initialPlayerHandPower;
             this.HandType = initialPlayerHandType;
             this.HasFolded = false;
-            this.FoldTurn = false;
             this.GameEnded = false;
+            this.Status = status;
             this.Call = initialPlayerCall;
             this.Raise = initialPlayerRaise;
         }
@@ -42,13 +47,30 @@
 
         public bool HasFolded { get; set; }
 
-        public bool FoldTurn { get; set; }
+        public bool Turn { get; set; }
 
         public bool GameEnded { get; set; }
 
         public int Call { get; set; }
 
         public int Raise { get; set; }
+
+        public Label Status
+        {
+            get
+            {
+                return this.status;
+            }
+            set
+            {
+                if (value == null)
+                {
+                   throw new ArgumentNullException("Status cannot be null.");
+                }
+
+                this.status = value;
+            }
+        }
 
         public Card Card1 { get; set; }
 
