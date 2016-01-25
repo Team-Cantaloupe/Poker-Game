@@ -13,13 +13,17 @@
 
         double HandType { get; set; }
 
-        bool HasFolded { get; }
+        bool HasFolded { get; set; }
 
-        bool FoldTurn { get; }
+        bool Turn { get; set; }
+
+        bool GameEnded { get; set; }
 
         int Call { get; set; }
 
         int Raise { get; set; }
+
+        Label Status { get; set; }
 
         Card Card1 { get; set; }
 

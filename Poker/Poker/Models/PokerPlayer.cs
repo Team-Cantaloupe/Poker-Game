@@ -4,5 +4,10 @@
 
     public class PokerPlayer : Player
     {
+        public PokerPlayer(Label status) 
+            : base(status)
+        {
+            this.Turn = true;
+        }
     }
 }
