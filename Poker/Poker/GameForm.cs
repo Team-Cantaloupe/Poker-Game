@@ -166,9 +166,7 @@ namespace Poker
 
             for (int cardIndex = 0; cardIndex < GameConstants.AllCardsInGame; cardIndex++)
             {
-                cardDeck[cardIndex] = Image.FromFile(CardImagePaths[cardIndex]);
-
-                this.ExtractDealthCardsNumbers(cardIndex);
+                 this.ExtractDealthCardsNumbers(cardIndex);
 
                 this.SetCardImageHolder(cardIndex);
 
