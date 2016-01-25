@@ -12,14 +12,17 @@ namespace Poker.Models
     {
         private readonly Bitmap backImage = new Bitmap("Assets\\Back\\Back.png");
 
-        public Card(int x, int y, Image image, int tag, PictureBox cardHolder)
+        public Card(int x, int y, Image image, int tag, PictureBox cardHolder, int cardBoardNumber)
         {
             this.CardHolder = cardHolder;
             this.CardHolder.Tag = tag;
             this.CardHolder.Image = image;
             this.CardHolder.Location = new Point(x, y);
+            this.CardBoardNumber = cardBoardNumber;
         }
 
         public PictureBox CardHolder { get; set; }
+
+        public int CardBoardNumber { get; set; }
     }
 }

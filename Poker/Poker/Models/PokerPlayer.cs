@@ -4,8 +4,8 @@
 
     public class PokerPlayer : Player
     {
-        public PokerPlayer(Label status) 
-            : base(status)
+        public PokerPlayer(int playerNumber, string name, Label status) 
+            : base(playerNumber,name, status)
         {
             this.Turn = true;
         }

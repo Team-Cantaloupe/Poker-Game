@@ -19,7 +19,7 @@ namespace Poker.Models
 
         private Label status;
 
-        protected Player(Label status)
+        protected Player(int playerNumber, string name, Label status)
         {
             this.Panel = new Panel
             {
@@ -27,6 +27,7 @@ namespace Poker.Models
                 Width = CardPanelWidth,
                 Height = CardPanelHeight
             };
+            this.Name = name;
             this.Chips = initialPlayerChips;
             this.HandPower = initialPlayerHandPower;
             this.HandType = initialPlayerHandType;
@@ -35,9 +36,12 @@ namespace Poker.Models
             this.Status = status;
             this.Call = initialPlayerCall;
             this.Raise = initialPlayerRaise;
+            this.PlayerNumber = playerNumber;
         }
 
         public Panel Panel { get; private set; }
+
+        public string Name { get; set; }
 
         public int Chips { get; set; }
 
@@ -75,5 +79,7 @@ namespace Poker.Models
         public Card Card1 { get; set; }
 
         public Card Card2 { get; set; }
+
+        public int PlayerNumber { get; set; }
     }
 }

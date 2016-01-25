@@ -4,8 +4,8 @@ namespace Poker.Models
 {
     public class BotPlayer : Player
     {
-        public BotPlayer(Label status) 
-            : base(status)
+        public BotPlayer(int playerNumber, string name, Label status) 
+            : base(playerNumber, name, status)
         {
             this.Turn = false;
         }

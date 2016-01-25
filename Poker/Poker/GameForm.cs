@@ -13,12 +13,6 @@ namespace Poker
     public partial class GameForm : Form
     {
         #region Variables
-        private const int DefaultBigBlind = 500;
-        private const int DefaultSmallBlind = 250;
-        private const int InitialBotCount = 5;
-        private const int DeckCardsCount = 52;
-        private const int DealthCardsCount = 17;
-
         private readonly ProgressBar progressBar = new ProgressBar();
         
         private IPlayer player;
@@ -88,15 +82,15 @@ namespace Poker
 
         public GameForm()
         {
-            this.call = DefaultBigBlind;
+            this.call = GameConstants.DefaultBigBlind;
             this.winnersCount = 0;
-            this.foldedPlayers = InitialBotCount;
-            this.bigBlind = DefaultBigBlind;
-            this.smallBlind = DefaultSmallBlind;
+            this.foldedPlayers = GameConstants.InitialBotCount;
+            this.bigBlind = GameConstants.DefaultBigBlind;
+            this.smallBlind = GameConstants.DefaultSmallBlind;
             this.CardImagePaths = Directory.GetFiles("Assets\\Cards", "*.png", SearchOption.TopDirectoryOnly);
-            this.cardDeck = new Image[DeckCardsCount];
-            this.cardImageHolder = new PictureBox[DeckCardsCount];
-            this.Reserve = new int[DealthCardsCount];
+            this.cardDeck = new Image[GameConstants.DeckCardsCount];
+            this.cardImageHolder = new PictureBox[GameConstants.DeckCardsCount];
+            this.Reserve = new int[GameConstants.AllCardsInGame];
             this.timer = new Timer();
             this.updates = new Timer();
 
@@ -105,12 +99,12 @@ namespace Poker
             updates.Start();
             InitializeComponent();
 
-            this.player = new PokerPlayer(this.playerStatus);
-            this.bot1 = new BotPlayer(this.bot1Status);
-            this.bot2 = new BotPlayer(this.bot2Status);
-            this.bot3 = new BotPlayer(this.bot3Status);
-            this.bot4 = new BotPlayer(this.bot4Status);
-            this.bot5 = new BotPlayer(this.bot5Status);
+            this.player = new PokerPlayer(-1, "Player", this.playerStatus);
+            this.bot1 = new BotPlayer(0, "Bot 1", this.bot1Status);
+            this.bot2 = new BotPlayer(1, "Bot 2", this.bot2Status);
+            this.bot3 = new BotPlayer(2, "Bot 3", this.bot3Status);
+            this.bot4 = new BotPlayer(3, "Bot 4", this.bot4Status);
+            this.bot5 = new BotPlayer(4, "Bot 5", this.bot5Status);
 
             width = this.Width;
             height = this.Height;
@@ -167,106 +161,51 @@ namespace Poker
             buttonCheck.Enabled = false;
             MaximizeBox = false;
             MinimizeBox = false;
-            Bitmap backImage = new Bitmap("Assets\\Back\\Back.png");
-            int horizontal = 580, vertical = 480;
-
+            
             this.CardDeckInit();
 
-            for (i = 0; i < GameConstants.AllCardsInGame; i++)
+            for (int cardIndex = 0; cardIndex < GameConstants.AllCardsInGame; cardIndex++)
             {
-                cardDeck[i] = Image.FromFile(CardImagePaths[i]);
-                var charsToRemove = new string[] { "Assets\\Cards\\", ".png" };
-                foreach (var c in charsToRemove)
-                {
-                    CardImagePaths[i] = CardImagePaths[i].Replace(c, string.Empty);
-                }
+                cardDeck[cardIndex] = Image.FromFile(CardImagePaths[cardIndex]);
 
-                Reserve[i] = int.Parse(CardImagePaths[i]) - 1;
-                cardImageHolder[i] = new PictureBox();
-                cardImageHolder[i].SizeMode = PictureBoxSizeMode.StretchImage;
-                cardImageHolder[i].Height = 130;
-                cardImageHolder[i].Width = 80;
-                this.Controls.Add(cardImageHolder[i]);
-                cardImageHolder[i].Name = "pb" + i.ToString();
-                // await Task.Delay(200);
+                this.ExtractDealthCardsNumbers(cardIndex);
+
+                this.SetCardImageHolder(cardIndex);
+
+                //await Task.Delay(200);
             }
 
-            for (int index = 0; index < GameConstants.NumberOfPlayerCards; index += 2)
+            int positionX = GameConstants.PlayerCardPositionX;
+            int positionY = GameConstants.PlayerCardPositionY;
+
+            this.DealPlayersCards(positionX, positionY);
+
+            positionX = GameConstants.TableCardPositionX;
+            positionY = GameConstants.TableCardPositionY;
+            
+
+            this.DealTableCards(positionX, positionY);
+            this.CheckRestartGame();
+            
+            if (player.Turn)
             {
-                if (index < 2)
-                {
-                    DealCardsToCurrentPlayer(player, index, horizontal, vertical, AnchorStyles.Bottom);
-                }
-
-                if (bot1.Chips > 0)
-                {
-                    foldedPlayers--;
-                    if (index >= 2 && index < 4)
-                    {
-                        horizontal = 15;
-                        vertical = 420;
-
-                        DealCardsToCurrentPlayer(bot1, index, horizontal, vertical, AnchorStyles.Bottom, AnchorStyles.Left);
-                    }
-                }
-
-                if (bot2.Chips > 0)
-                {
-                    foldedPlayers--;
-                    if (index >= 4 && index < 6)
-                    {
-                        horizontal = 75;
-                        vertical = 65;
-
-                        DealCardsToCurrentPlayer(bot2, index, horizontal, vertical, AnchorStyles.Top, AnchorStyles.Left);
-                    }
-                }
-
-                if (bot3.Chips > 0)
-                {
-                    foldedPlayers--;
-                    if (index >= 6 && index < 8)
-                    {
-                        horizontal = 590;
-                        vertical = 25;
-
-                        DealCardsToCurrentPlayer(bot3, index, horizontal, vertical, AnchorStyles.Top);
-                    }
-                }
-
-                if (bot4.Chips > 0)
-                {
-                    foldedPlayers--;
-                    if (index >= 8 && index < 10)
-                    {
-                        horizontal = 1115;
-                        vertical = 65;
-
-                        DealCardsToCurrentPlayer(bot4, index, horizontal, vertical, AnchorStyles.Top, AnchorStyles.Right);
-                    }
-                }
-
-                if (bot5.Chips > 0)
-                {
-                    foldedPlayers--;
-                    if (index >= 10 && index < 12)
-                    {
-                        horizontal = 1160;
-                        vertical = 420;
-
-                        DealCardsToCurrentPlayer(bot5, index, horizontal, vertical, AnchorStyles.Bottom, AnchorStyles.Right);
-                    }
-                }
+                buttonRaise.Enabled = true;
+                buttonCall.Enabled = true;
+                buttonRaise.Enabled = true;
+                buttonRaise.Enabled = true;
+                buttonFold.Enabled = true;
             }
+        }
 
-            horizontal = 410;
-            vertical = 265;
+        private void DealTableCards(int positionX, int positionY)
+        {
+            Bitmap backImage = new Bitmap("Assets\\Back\\Back.png");
 
             for (int index = GameConstants.FirstBoardCardIndex; index < GameConstants.AllCardsInGame; index++)
             {
-                DealBoardCards(index, horizontal, vertical, backImage);
+                DealBoardCards(index, positionX, positionY, backImage);
 
-                horizontal += GameConstants.BoardCardsOffset;
+                positionX += GameConstants.BoardCardsOffset;
 
                 //if (bot1.Chips <= 0)
                 //{
@@ -368,10 +307,86 @@ namespace Poker
                     timer.Start();
                 }
             }
+        }
 
+        private void DealPlayersCards(int cardPositionX, int cardPositionY)
+        {
+            for (int index = 0; index < GameConstants.NumberOfPlayerCards; index += 2)
+            {
+                if (index < 2)
+                {
+                    this.DealCardsToCurrentPlayer(player, index, cardPositionX, cardPositionY, 0, 1, AnchorStyles.Bottom);
+                }
+
+                if (bot1.Chips > 0)
+                {
+                    foldedPlayers--;
+                    if (2 <= index && index < 4)
+                    {
+                        cardPositionX = 15;
+                        cardPositionY = 420;
+
+                        DealCardsToCurrentPlayer(bot1, index, cardPositionX, cardPositionY, 2, 3, AnchorStyles.Bottom, AnchorStyles.Left);
+                    }
+                }
+
+                if (bot2.Chips > 0)
+                {
+                    foldedPlayers--;
+                    if (index >= 4 && index < 6)
+                    {
+                        cardPositionX = 75;
+                        cardPositionY = 65;
+
+                        DealCardsToCurrentPlayer(bot2, index, cardPositionX, cardPositionY, 4, 5, AnchorStyles.Top, AnchorStyles.Left);
+                    }
+                }
+
+                if (bot3.Chips > 0)
+                {
+                    foldedPlayers--;
+                    if (index >= 6 && index < 8)
+                    {
+                        cardPositionX = 590;
+                        cardPositionY = 25;
+
+                        DealCardsToCurrentPlayer(bot3, index, cardPositionX, cardPositionY, 6, 7, AnchorStyles.Top);
+                    }
+                }
+
+                if (bot4.Chips > 0)
+                {
+                    foldedPlayers--;
+                    if (index >= 8 && index < 10)
+                    {
+                        cardPositionX = 1115;
+                        cardPositionY = 65;
+
+                        this.DealCardsToCurrentPlayer(bot4, index, cardPositionX, cardPositionY, 8, 9, AnchorStyles.Top, AnchorStyles.Right);
+                    }
+                }
+
+                if (bot5.Chips > 0)
+                {
+                    foldedPlayers--;
+                    if (index >= 10 && index < 12)
+                    {
+                        cardPositionX = 1160;
+                        cardPositionY = 420;
+
+                        this.DealCardsToCurrentPlayer(bot5, index, cardPositionX, cardPositionY, 10, 11, AnchorStyles.Bottom, AnchorStyles.Right);
+                    }
+                }
+            }
+        }
+
+        private void CheckRestartGame()
+        {
             if (foldedPlayers == 5)
             {
-                DialogResult dialogResult = MessageBox.Show("Would You Like To Play Again ?", "You Won , Congratulations ! ", MessageBoxButtons.YesNo);
+                DialogResult dialogResult = MessageBox.Show(GameConstants.PlayAgainMessage,
+                    GameConstants.PlayerWonMessage,
+                    MessageBoxButtons.YesNo);
                 if (dialogResult == DialogResult.Yes)
                 {
                     Application.Restart();
@@ -385,14 +400,28 @@ namespace Poker
             {
                 foldedPlayers = 5;
             }
-            if (i == 17)
+        }
+
+        private void SetCardImageHolder(int cardIndex)
+        {
+            cardImageHolder[cardIndex] = new PictureBox
             {
-                buttonRaise.Enabled = true;
-                buttonCall.Enabled = true;
-                buttonRaise.Enabled = true;
-                buttonRaise.Enabled = true;
-                buttonFold.Enabled = true;
-            }
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                Height = GameConstants.CardImageHolderHeight,
+                Width = GameConstants.CardImageHolderWidth,
+                Name = "pb" + i.ToString()
+            };
+
+            this.Controls.Add(cardImageHolder[cardIndex]);
+        }
+
+        private void ExtractDealthCardsNumbers(int cardIndex)
+        {
+            string directoryPathRemove = "Assets\\Cards\\";
+            string fileExtension = ".png";
+            CardImagePaths[cardIndex] = CardImagePaths[cardIndex].Replace(directoryPathRemove, string.Empty);
+            CardImagePaths[cardIndex] = CardImagePaths[cardIndex].Replace(fileExtension, string.Empty);
+            Reserve[cardIndex] = int.Parse(CardImagePaths[cardIndex]) - 1;
         }
 
         private void DealBoardCards(int index, int horizontal, int vertical, Image cardImage)
@@ -403,13 +432,13 @@ namespace Poker
             cardImageHolder[index].Location = new Point(horizontal, vertical);
         }
 
-        private void DealCardsToCurrentPlayer(IPlayer currentPlayer, int cardIndex, int x, int y, AnchorStyles style1, AnchorStyles style2 = AnchorStyles.None)
+        private void DealCardsToCurrentPlayer(IPlayer currentPlayer, int cardIndex, int x, int y, int firstCardBoardNumber, int secondCardBoardNumber, AnchorStyles style1, AnchorStyles style2 = AnchorStyles.None)
         {
             cardImageHolder[cardIndex].Anchor = (style1 | style2);
-            currentPlayer.Card1 = new Card(x, y, cardDeck[cardIndex], Reserve[cardIndex], cardImageHolder[cardIndex]);
+            currentPlayer.Card1 = new Card(x, y, cardDeck[cardIndex], Reserve[cardIndex], cardImageHolder[cardIndex], firstCardBoardNumber);
             x += currentPlayer.Card1.CardHolder.Width;
             cardImageHolder[cardIndex + 1].Anchor = (style1 | style2);
-            currentPlayer.Card2 = new Card(x, y, cardDeck[cardIndex + 1], Reserve[cardIndex + 1], cardImageHolder[cardIndex + 1]);
+            currentPlayer.Card2 = new Card(x, y, cardDeck[cardIndex + 1], Reserve[cardIndex + 1], cardImageHolder[cardIndex + 1], secondCardBoardNumber);
             this.Controls.Add(currentPlayer.Panel);
             currentPlayer.Panel.Location = new Point(currentPlayer.Card1.CardHolder.Left - 10, currentPlayer.Card1.CardHolder.Top - 10);
             currentPlayer.Panel.Visible = false;
@@ -430,6 +459,7 @@ namespace Poker
         async Task Turns()
         {
             #region Rotating
+
             if (!player.GameEnded)
             {
                 if (player.Turn)
@@ -454,12 +484,9 @@ namespace Poker
                 await AllIn();
                 if (player.GameEnded && !player.HasFolded)
                 {
-                    if (buttonCall.Text.Contains("All in") == false || buttonRaise.Text.Contains("All in") == false)
+                    if (!buttonCall.Text.Contains("All in")|| !buttonRaise.Text.Contains("All in"))
                     {
-                        allPlayersIsActiveCollection.RemoveAt(0);
-                        allPlayersIsActiveCollection.Insert(0, null);
-                        maxLeft--;
-                        player.HasFolded = true;
+                        this.RemovePlayerFromGame(player, 0);
                     }
                 }
 
@@ -472,150 +499,32 @@ namespace Poker
                 buttonFold.Enabled = false;
                 timer.Stop();
                 bot1.Turn = true;
+
                 if (!bot1.GameEnded)
                 {
-                    if (bot1.Turn)
-                    {
-                        FixCall(bot1, 1);
-                        FixCall(bot1, 2);
-                        Rules(2, 3, "Bot 1", bot1);
-                        MessageBox.Show("Bot 1's Turn");
-                        AI(2, 3, bot1, 0);
-                        turnCount++;
-                        last = 1;
-                        bot1.Turn = false;
-                        bot2.Turn = true;
-                    }
+                    this.CheckBotActions(bot1, bot2, 1);
                 }
-                if (bot1.GameEnded && !bot1.HasFolded)
-                {
-                    allPlayersIsActiveCollection.RemoveAt(1);
-                    allPlayersIsActiveCollection.Insert(1, null);
-                    maxLeft--;
-                    bot1.HasFolded = true;
-                }
-                if (bot1.GameEnded || !bot1.Turn)
-                {
-                    await CheckRaise(1, 1);
-                    bot2.Turn = true;
-                }
+
                 if (!bot2.GameEnded)
                 {
-                    if (bot2.Turn)
-                    {
-                        FixCall(bot2, 1);
-                        FixCall(bot2, 1);
-                        Rules(4, 5, "Bot 2", bot2);
-                        MessageBox.Show("Bot 2's Turn");
-                        AI(4, 5, bot2, 1);
-                        turnCount++;
-                        last = 2;
-                        bot2.Turn = false;
-                        bot3.Turn = true;
-                    }
+                    this.CheckBotActions(bot2, bot3, 2);
                 }
-                if (bot2.GameEnded && !bot2.HasFolded)
-                {
-                    allPlayersIsActiveCollection.RemoveAt(2);
-                    allPlayersIsActiveCollection.Insert(2, null);
-                    maxLeft--;
-                    bot2.HasFolded = true;
-                }
-                if (bot2.GameEnded || !bot2.Turn)
-                {
-                    await CheckRaise(2, 2);
-                    bot3.Turn = true;
-                }
+
                 if (!bot3.GameEnded)
                 {
-                    if (bot3.Turn)
-                    {
-                        FixCall(bot3, 1);
-                        FixCall(bot3, 2);
-                        Rules(6, 7, "Bot 3", bot3);
-                        MessageBox.Show("Bot 3's Turn");
-                        AI(6, 7, bot3, 2);
-                        turnCount++;
-                        last = 3;
-                        bot3.Turn = false;
-                        bot4.Turn = true;
-                    }
+                        this.CheckBotActions(bot3, bot4, 3);
                 }
-                if (bot3.GameEnded && !bot3.HasFolded)
-                {
-                    allPlayersIsActiveCollection.RemoveAt(3);
-                    allPlayersIsActiveCollection.Insert(3, null);
-                    maxLeft--;
-                    bot3.HasFolded = true;
-                }
-                if (bot3.GameEnded || !bot3.Turn)
-                {
-                    await CheckRaise(3, 3);
-                    bot4.Turn = true;
-                }
+               
                 if (!bot4.GameEnded)
                 {
-                    if (bot4.Turn)
-                    {
-                        FixCall(bot4, 1);
-                        FixCall(bot4, 2);
-                        Rules(8, 9, "Bot 4", bot4);
-                        MessageBox.Show("Bot 4's Turn");
-                        AI(8, 9, bot4, 3);
-                        turnCount++;
-                        last = 4;
-                        bot4.Turn = false;
-                        bot5.Turn = true;
-                    }
+                        this.CheckBotActions(bot4, bot5, 4);
                 }
-                if (bot4.GameEnded && !bot4.HasFolded)
-                {
-                    allPlayersIsActiveCollection.RemoveAt(4);
-                    allPlayersIsActiveCollection.Insert(4, null);
-                    maxLeft--;
-                    bot4.HasFolded = true;
-                }
-                if (bot4.GameEnded || !bot4.Turn)
-                {
-                    await CheckRaise(4, 4);
-                    bot5.Turn = true;
-                }
+
                 if (!bot5.GameEnded)
                 {
-                    if (bot5.Turn)
-                    {
-                        FixCall(bot5, 1);
-                        FixCall(bot5, 2);
-                        Rules(10, 11, "Bot 5", bot5);
-                        MessageBox.Show("Bot 5's Turn");
-                        AI(10, 11, bot5, 4);
-                        turnCount++;
-                        last = 5;
-                        bot5.Turn = false;
-                    }
+                    this.CheckBotActions(bot5, player, 5);
                 }
-                if (bot5.GameEnded && !bot5.HasFolded)
-                {
-                    allPlayersIsActiveCollection.RemoveAt(5);
-                    allPlayersIsActiveCollection.Insert(5, null);
-                    maxLeft--;
-                    bot5.HasFolded = true;
-                }
-                if (bot5.GameEnded || !bot5.Turn)
-                {
-                    await CheckRaise(5, 5);
-                    player.Turn = true;
-                }
-                if (player.GameEnded && !player.HasFolded)
-                {
-                    if (buttonCall.Text.Contains("All in") == false || buttonRaise.Text.Contains("All in") == false)
-                    {
-                        allPlayersIsActiveCollection.RemoveAt(0);
-                        allPlayersIsActiveCollection.Insert(0, null);
-                        maxLeft--;
-                        player.HasFolded = true;
-                    }
-                }
+                
             #endregion
                 await AllIn();
                 if (!restart)
@@ -626,19 +535,49 @@ namespace Poker
             }
         }
 
-        void Rules(int c1, int c2, string currentText, IPlayer gamePlayer)
+        private void RemovePlayerFromGame(IPlayer gamePlayer, int position)
         {
-            //if (c1 == 0 && c2 == 1)
-            //{
-            //}
-            if (!gamePlayer.GameEnded || c1 == 0 && c2 == 1 && gamePlayer.Status.Text.Contains("Fold") == false)
+            allPlayersIsActiveCollection.RemoveAt(position);
+            allPlayersIsActiveCollection.Insert(position, null);
+            maxLeft--;
+            gamePlayer.HasFolded = true;
+        }
+
+        private void CheckBotActions(IPlayer bot, IPlayer nextBot, int botIndex)
+        {
+            if (bot.Turn)
+            {
+                FixCall(bot, 1);
+                FixCall(bot, 2);
+                Rules(bot1);
+                MessageBox.Show(string.Format("{0}'s Turn", bot.Name));
+                AI(bot1);
+                turnCount++;
+                last = botIndex;
+                bot.Turn = false;
+                nextBot.Turn = true;
+            }
+            if (bot.GameEnded && !bot.HasFolded)
+            {
+                this.RemovePlayerFromGame(bot, botIndex);
+            }
+            if (bot.GameEnded || !bot.Turn)
+            {
+                CheckRaise(botIndex, botIndex);
+                nextBot.Turn = true;
+            }
+        }
+
+        void Rules(IPlayer gamePlayer)
+        {
+            if (!gamePlayer.GameEnded || gamePlayer.Card1.CardBoardNumber == 0 && gamePlayer.Card2.CardBoardNumber == 1 && gamePlayer.Status.Text.Contains("Fold") == false)
             {
                 #region Variables
                 bool done = false, vf = false;
                 int[] Straight1 = new int[5];
                 int[] Straight = new int[7];
-                Straight[0] = Reserve[c1];
-                Straight[1] = Reserve[c2];
+                Straight[0] = Reserve[gamePlayer.Card1.CardBoardNumber];
+                Straight[1] = Reserve[gamePlayer.Card2.CardBoardNumber];
                 Straight1[0] = Straight[2] = Reserve[12];
                 Straight1[1] = Straight[3] = Reserve[13];
                 Straight1[2] = Straight[4] = Reserve[14];
@@ -656,7 +595,7 @@ namespace Poker
                 #endregion
                 for (i = 0; i < 16; i++)
                 {
-                    if (Reserve[i] == int.Parse(cardImageHolder[c1].Tag.ToString()) && Reserve[i + 1] == int.Parse(cardImageHolder[c2].Tag.ToString()))
+                    if (Reserve[i] == int.Parse(cardImageHolder[gamePlayer.Card1.CardBoardNumber].Tag.ToString()) && Reserve[i + 1] == int.Parse(cardImageHolder[gamePlayer.Card2.CardBoardNumber].Tag.ToString()))
                     {
                         //Pair from Hand currentHandType = 1
 
@@ -1649,7 +1588,7 @@ namespace Poker
             }
         }
 
-        void Winner(double current, double Power, string currentText, int chips, string lastly)
+        void Winner(IPlayer gamePlayer, string lastly)
         {
             if (lastly == " ")
             {
@@ -1661,55 +1600,55 @@ namespace Poker
                 if (cardImageHolder[j].Visible)
                     cardImageHolder[j].Image = cardDeck[j];
             }
-            if (current == sorted.Current)
+            if (gamePlayer.HandType == sorted.Current)
             {
-                if (Power == sorted.Power)
+                if (gamePlayer.HandPower == sorted.Power)
                 {
                     winnersCount++;
-                    CheckWinners.Add(currentText);
-                    if (current == -1)
+                    CheckWinners.Add(gamePlayer.Name);
+                    if (gamePlayer.HandType == -1)
                     {
-                        MessageBox.Show(currentText + " High Card ");
+                        MessageBox.Show(gamePlayer.Name + " High Card ");
                     }
-                    if (current == 1 || current == 0)
+                    if (gamePlayer.HandType == 1 || gamePlayer.HandType == 0)
                     {
-                        MessageBox.Show(currentText + " Pair ");
+                        MessageBox.Show(gamePlayer.Name + " Pair ");
                     }
-                    if (current == 2)
+                    if (gamePlayer.HandType == 2)
                     {
-                        MessageBox.Show(currentText + " Two Pair ");
+                        MessageBox.Show(gamePlayer.Name + " Two Pair ");
                     }
-                    if (current == 3)
+                    if (gamePlayer.HandType == 3)
                     {
-                        MessageBox.Show(currentText + " Three of a Kind ");
+                        MessageBox.Show(gamePlayer.Name + " Three of a Kind ");
                     }
-                    if (current == 4)
+                    if (gamePlayer.HandType == 4)
                     {
-                        MessageBox.Show(currentText + " Straight ");
+                        MessageBox.Show(gamePlayer.Name + " Straight ");
                     }
-                    if (current == 5 || current == 5.5)
+                    if (gamePlayer.HandType == 5 || gamePlayer.HandType == 5.5)
                     {
-                        MessageBox.Show(currentText + " Flush ");
+                        MessageBox.Show(gamePlayer.Name + " Flush ");
                     }
-                    if (current == 6)
+                    if (gamePlayer.HandType == 6)
                     {
-                        MessageBox.Show(currentText + " Full House ");
+                        MessageBox.Show(gamePlayer.Name + " Full House ");
                     }
-                    if (current == 7)
+                    if (gamePlayer.HandType == 7)
                     {
-                        MessageBox.Show(currentText + " Four of a Kind ");
+                        MessageBox.Show(gamePlayer.Name + " Four of a Kind ");
                     }
-                    if (current == 8)
+                    if (gamePlayer.HandType == 8)
                     {
-                        MessageBox.Show(currentText + " Straight Flush ");
+                        MessageBox.Show(gamePlayer.Name + " Straight Flush ");
                     }
-                    if (current == 9)
+                    if (gamePlayer.HandType == 9)
                     {
-                        MessageBox.Show(currentText + " Royal Flush ! ");
+                        MessageBox.Show(gamePlayer.Name + " Royal Flush ! ");
                     }
                 }
             }
-            if (currentText == lastly)//lastfixed
+            if (gamePlayer.Name == lastly)//lastfixed
             {
                 if (winnersCount > 1)
                 {
@@ -1884,39 +1823,39 @@ namespace Poker
                 if (!player.Status.Text.Contains("Fold"))
                 {
                     fixedLast = "Player";
-                    Rules(0, 1, "Player", player);
+                    Rules(player);
                 }
                 if (!bot1.Status.Text.Contains("Fold"))
                 {
                     fixedLast = "Bot 1";
-                    Rules(2, 3, "Bot 1", bot1);
+                    Rules(bot1);
                 }
                 if (!bot2.Status.Text.Contains("Fold"))
                 {
                     fixedLast = "Bot 2";
-                    Rules(4, 5, "Bot 2", bot2);
+                    Rules(bot2);
                 }
                 if (!bot3.Status.Text.Contains("Fold"))
                 {
                     fixedLast = "Bot 3";
-                    Rules(6, 7, "Bot 3", bot3);
+                    Rules(bot3);
                 }
                 if (!bot4.Status.Text.Contains("Fold"))
                 {
                     fixedLast = "Bot 4";
-                    Rules(8, 9, "Bot 4", bot4);
+                    Rules(bot4);
                 }
                 if (!bot5.Status.Text.Contains("Fold"))
                 {
                     fixedLast = "Bot 5";
-                    Rules(10, 11, "Bot 5", bot5);
+                    Rules(bot5);
                 }
-                Winner(player.HandType, player.HandPower, "Player", player.Chips, fixedLast);
-                Winner(bot1.HandType, bot1.HandPower, "Bot 1", bot1.Chips, fixedLast);
-                Winner(bot2.HandType, bot2.HandPower, "Bot 2", bot2.Chips, fixedLast);
-                Winner(bot3.HandType, bot3.HandPower, "Bot 3", bot3.Chips, fixedLast);
-                Winner(bot4.HandType, bot4.HandPower, "Bot 4", bot4.Chips, fixedLast);
-                Winner(bot5.HandType, bot5.HandPower, "Bot 5", bot5.Chips, fixedLast);
+                Winner(player, fixedLast);
+                Winner(bot1, fixedLast);
+                Winner(bot2, fixedLast);
+                Winner(bot3, fixedLast);
+                Winner(bot4, fixedLast);
+                Winner(bot5, fixedLast);
                 restart = true;
                 player.Turn = true;
                 player.GameEnded = false;
@@ -2267,41 +2206,41 @@ namespace Poker
             if (!playerStatus.Text.Contains("Fold"))
             {
                 fixedLast = "Player";
-                Rules(0, 1, "Player", player);
+                Rules(player);
             }
             if (!bot1Status.Text.Contains("Fold"))
             {
                 fixedLast = "Bot 1";
-                Rules(2, 3, "Bot 1", bot1);
+                Rules(bot1);
             }
             if (!bot2Status.Text.Contains("Fold"))
             {
                 fixedLast = "Bot 2";
-                Rules(4, 5, "Bot 2", bot2);
+                Rules(bot2);
             }
             if (!bot3Status.Text.Contains("Fold"))
             {
                 fixedLast = "Bot 3";
-                Rules(6, 7, "Bot 3", bot3);
+                Rules(bot3);
             }
             if (!bot4Status.Text.Contains("Fold"))
             {
                 fixedLast = "Bot 4";
-                Rules(8, 9, "Bot 4", bot4);
+                Rules(bot4);
             }
             if (!bot5Status.Text.Contains("Fold"))
             {
                 fixedLast = "Bot 5";
-                Rules(10, 11, "Bot 5", bot5);
+                Rules(bot5);
             }
-            Winner(player.HandType, player.HandPower, "Player", player.Chips, fixedLast);
-            Winner(bot1.HandType, bot1.HandPower, "Bot 1", bot1.Chips, fixedLast);
-            Winner(bot2.HandType, bot2.HandPower, "Bot 2", bot2.Chips, fixedLast);
-            Winner(bot3.HandType, bot3.HandPower, "Bot 3", bot3.Chips, fixedLast);
-            Winner(bot4.HandType, bot4.HandPower, "Bot 4", bot4.Chips, fixedLast);
-            Winner(bot5.HandType, bot5.HandPower, "Bot 5", bot5.Chips, fixedLast);
+            Winner(player, fixedLast);
+            Winner(bot1, fixedLast);
+            Winner(bot2, fixedLast);
+            Winner(bot3, fixedLast);
+            Winner(bot4, fixedLast);
+            Winner(bot5, fixedLast);
         }
-        void AI(int c1, int c2, IPlayer gamePlayer, int name)
+        void AI(IPlayer gamePlayer)
         {
             if (!gamePlayer.GameEnded)
             {
@@ -2323,33 +2262,33 @@ namespace Poker
                 }
                 if (gamePlayer.HandType == 3)
                 {
-                    ThreeOfAKind(gamePlayer, name);
+                    ThreeOfAKind(gamePlayer);
                 }
                 if (gamePlayer.HandType == 4)
                 {
-                    Straight(gamePlayer, name);
+                    Straight(gamePlayer);
                 }
                 if (gamePlayer.HandType == 5 || gamePlayer.HandType == 5.5)
                 {
-                    Flush(gamePlayer, name);
+                    Flush(gamePlayer);
                 }
                 if (gamePlayer.HandType == 6)
                 {
-                    FullHouse(gamePlayer, name);
+                    FullHouse(gamePlayer);
                 }
                 if (gamePlayer.HandType == 7)
                 {
-                    FourOfAKind(gamePlayer, name);
+                    FourOfAKind(gamePlayer);
                 }
                 if (gamePlayer.HandType == 8 || gamePlayer.HandType == 9)
                 {
-                    StraightFlush(gamePlayer, name);
+                    StraightFlush(gamePlayer);
                 }
             }
             if (gamePlayer.GameEnded)
             {
-                cardImageHolder[c1].Visible = false;
-                cardImageHolder[c2].Visible = false;
+                cardImageHolder[gamePlayer.Card1.CardBoardNumber].Visible = false;
+                cardImageHolder[gamePlayer.Card2.CardBoardNumber].Visible = false;
             }
         }
         private void HighCard(IPlayer gamePlayer)
@@ -2396,81 +2335,81 @@ namespace Poker
                 PH(gamePlayer, rCall, 4, rRaise);
             }
         }
-        private void ThreeOfAKind(IPlayer gamePlayer, int name)
+        private void ThreeOfAKind(IPlayer gamePlayer)
         {
             Random tk = new Random();
             int tCall = tk.Next(3, 7);
             int tRaise = tk.Next(4, 8);
             if (gamePlayer.HandPower <= 390 && gamePlayer.HandPower >= 330)
             {
-                Smooth(gamePlayer, name, tCall, tRaise);
+                Smooth(gamePlayer, tCall, tRaise);
             }
             if (gamePlayer.HandPower <= 327 && gamePlayer.HandPower >= 321)//10  8
             {
-                Smooth(gamePlayer, name, tCall, tRaise);
+                Smooth(gamePlayer, tCall, tRaise);
             }
             if (gamePlayer.HandPower < 321 && gamePlayer.HandPower >= 303)//7 2
             {
-                Smooth(gamePlayer, name, tCall, tRaise);
+                Smooth(gamePlayer, tCall, tRaise);
             }
         }
-        private void Straight(IPlayer gamePlayer, int name)
+        private void Straight(IPlayer gamePlayer)
         {
             Random str = new Random();
             int sCall = str.Next(3, 6);
             int sRaise = str.Next(3, 8);
             if (gamePlayer.HandPower <= 480 && gamePlayer.HandPower >= 410)
             {
-                Smooth(gamePlayer, name, sCall, sRaise);
+                Smooth(gamePlayer, sCall, sRaise);
             }
             if (gamePlayer.HandPower <= 409 && gamePlayer.HandPower >= 407)//10  8
             {
-                Smooth(gamePlayer, name, sCall, sRaise);
+                Smooth(gamePlayer, sCall, sRaise);
             }
             if (gamePlayer.HandPower < 407 && gamePlayer.HandPower >= 404)
             {
-                Smooth(gamePlayer, name, sCall, sRaise);
+                Smooth(gamePlayer, sCall, sRaise);
             }
         }
-        private void Flush(IPlayer gamePlayer, int name)
+        private void Flush(IPlayer gamePlayer)
         {
             Random fsh = new Random();
             int fCall = fsh.Next(2, 6);
             int fRaise = fsh.Next(3, 7);
-            Smooth(gamePlayer, name, fCall, fRaise);
+            Smooth(gamePlayer, fCall, fRaise);
         }
-        private void FullHouse(IPlayer gamePlayer, int name)
+        private void FullHouse(IPlayer gamePlayer)
         {
             Random flh = new Random();
             int fhCall = flh.Next(1, 5);
             int fhRaise = flh.Next(2, 6);
             if (gamePlayer.HandPower <= 626 && gamePlayer.HandPower>= 620)
             {
-                Smooth(gamePlayer, name, fhCall, fhRaise);
+                Smooth(gamePlayer, fhCall, fhRaise);
             }
             if (gamePlayer.HandPower < 620 && gamePlayer.HandPower >= 602)
             {
-                Smooth(gamePlayer, name, fhCall, fhRaise);
+                Smooth(gamePlayer, fhCall, fhRaise);
             }
         }
-        private void FourOfAKind(IPlayer gamePlayer, int name)
+        private void FourOfAKind(IPlayer gamePlayer)
         {
             Random fk = new Random();
             int fkCall = fk.Next(1, 4);
             int fkRaise = fk.Next(2, 5);
             if (gamePlayer.HandPower <= 752 && gamePlayer.HandPower >= 704)
             {
-                Smooth(gamePlayer, name, fkCall, fkRaise);
+                Smooth(gamePlayer, fkCall, fkRaise);
             }
         }
-        private void StraightFlush(IPlayer gamePlayer, int name)
+        private void StraightFlush(IPlayer gamePlayer)
         {
             Random sf = new Random();
             int sfCall = sf.Next(1, 3);
             int sfRaise = sf.Next(1, 3);
             if (gamePlayer.HandPower <= 913 && gamePlayer.HandPower >= 804)
             {
-                Smooth(gamePlayer, name, sfCall, sfRaise);
+                Smooth(gamePlayer, sfCall, sfRaise);
             }
         }
 
@@ -2662,7 +2601,7 @@ namespace Poker
                 gamePlayer.GameEnded = true;
             }
         }
-        void Smooth(IPlayer gamePlayer, int name, int n, int r)
+        void Smooth(IPlayer gamePlayer, int n, int r)
         {
             Random rand = new Random();
             int rnd = rand.Next(1, 3);
@@ -2838,7 +2777,7 @@ namespace Poker
         }
         private async void bCall_Click(object sender, EventArgs e)
         {
-            Rules(0, 1, "Player", player);
+            Rules(player);
             if (player.Chips >= call)
             {
                 player.Chips -= call;
@@ -2869,7 +2808,7 @@ namespace Poker
         }
         private async void bRaise_Click(object sender, EventArgs e)
         {
-            Rules(0, 1, "Player", player);
+            Rules(player);
             int parsedValue;
             if (raiseTextBox.Text != "" && int.TryParse(raiseTextBox.Text, out parsedValue))
             {

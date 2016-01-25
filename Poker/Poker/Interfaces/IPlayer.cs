@@ -7,6 +7,8 @@
     {
         Panel Panel { get; }
 
+        string Name { get; set; }
+
         int Chips { get; set; }
 
         double HandPower { get; set; }
@@ -28,5 +30,7 @@
         Card Card1 { get; set; }
 
         Card Card2 { get; set; }
+
+        int PlayerNumber { get; set; }
     }
 }
