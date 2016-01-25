@@ -17,6 +17,8 @@
 
         bool FoldTurn { get; }
 
+        bool GameEnded { get; set; }
+
         int Call { get; set; }
 
         int Raise { get; set; }

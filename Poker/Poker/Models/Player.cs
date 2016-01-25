@@ -9,24 +9,27 @@
         private const int initialPlayerChips = 10000;
         private const double initialPlayerHandPower = 0;
         private const double initialPlayerHandType = -1;
-        private const int initialCall = 0;
-        private const int initialRaise = 0;
+        private const int initialPlayerCall = 0;
+        private const int initialPlayerRaise = 0;
+        private const int CardPanelWidth = 180;
+        private const int CardPanelHeight = 150;
 
         protected Player()
         {
             this.Panel = new Panel
             {
                 BackColor = Color.DarkBlue,
-                Height = 150,
-                Width = 180
+                Width = CardPanelWidth,
+                Height = CardPanelHeight
             };
             this.Chips = initialPlayerChips;
             this.HandPower = initialPlayerHandPower;
             this.HandType = initialPlayerHandType;
             this.HasFolded = false;
             this.FoldTurn = false;
-            this.Call = initialCall;
-            this.Raise = initialRaise;
+            this.GameEnded = false;
+            this.Call = initialPlayerCall;
+            this.Raise = initialPlayerRaise;
         }
 
         public Panel Panel { get; private set; }
@@ -40,6 +43,8 @@
         public bool HasFolded { get; set; }
 
         public bool FoldTurn { get; set; }
+
+        public bool GameEnded { get; set; }
 
         public int Call { get; set; }
 
