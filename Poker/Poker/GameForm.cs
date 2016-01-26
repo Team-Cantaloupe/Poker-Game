@@ -13,8 +13,9 @@ namespace Poker
     public partial class GameForm : Form
     {
         #region Variables
+
         private readonly ProgressBar progressBar = new ProgressBar();
-        
+
         private IPlayer player;
         private IPlayer bot1;
         private IPlayer bot2;
@@ -43,25 +44,13 @@ namespace Poker
         private int raisedTurn = 1;
 
         private List<bool?> allPlayersIsActiveCollection = new List<bool?>();
-        private List<Type> Win = new List<Type>();
-        private List<string> CheckWinners = new List<string>();
+        private List<HandType> WinningHands = new List<HandType>();
+        private List<string> candidateWinners = new List<string>();
         private List<int> ints = new List<int>();
 
         private bool restart = false;
         private bool raising = false;
-        Poker.Type sorted;
-
-        /*string[] CardImagePaths ={
-                   "Assets\\Cards\\33.png","Assets\\Cards\\22.png",
-                    "Assets\\Cards\\29.png","Assets\\Cards\\21.png",
-                    "Assets\\Cards\\36.png","Assets\\Cards\\17.png",
-                    "Assets\\Cards\\40.png","Assets\\Cards\\16.png",
-                    "Assets\\Cards\\5.png","Assets\\Cards\\47.png",
-                    "Assets\\Cards\\37.png","Assets\\Cards\\13.png",
-                    
-                    "Assets\\Cards\\12.png",
-                    "Assets\\Cards\\8.png","Assets\\Cards\\18.png",
-                    "Assets\\Cards\\15.png","Assets\\Cards\\27.png"};*/
+        private HandType highestHand;
 
         private string[] CardImagePaths;
         private Image[] cardDeck;
@@ -161,12 +150,12 @@ namespace Poker
             buttonCheck.Enabled = false;
             MaximizeBox = false;
             MinimizeBox = false;
-            
+
             this.CardDeckInit();
 
             for (int cardIndex = 0; cardIndex < GameConstants.AllCardsInGame; cardIndex++)
             {
-                 this.ExtractDealthCardsNumbers(cardIndex);
+                this.ExtractDealthCardsNumbers(cardIndex);
 
                 this.SetCardImageHolder(cardIndex);
 
@@ -180,11 +169,11 @@ namespace Poker
 
             positionX = GameConstants.TableCardPositionX;
             positionY = GameConstants.TableCardPositionY;
-            
+
 
             this.DealTableCards(positionX, positionY);
             this.CheckRestartGame();
-            
+
             if (player.Turn)
             {
                 buttonRaise.Enabled = true;
@@ -324,7 +313,8 @@ namespace Poker
                         cardPositionX = 15;
                         cardPositionY = 420;
 
-                        DealCardsToCurrentPlayer(bot1, index, cardPositionX, cardPositionY, 2, 3, AnchorStyles.Bottom, AnchorStyles.Left);
+                        DealCardsToCurrentPlayer(bot1, index, cardPositionX, cardPositionY, 2, 3, AnchorStyles.Bottom,
+                            AnchorStyles.Left);
                     }
                 }
 
@@ -336,7 +326,8 @@ namespace Poker
                         cardPositionX = 75;
                         cardPositionY = 65;
 
-                        DealCardsToCurrentPlayer(bot2, index, cardPositionX, cardPositionY, 4, 5, AnchorStyles.Top, AnchorStyles.Left);
+                        DealCardsToCurrentPlayer(bot2, index, cardPositionX, cardPositionY, 4, 5, AnchorStyles.Top,
+                            AnchorStyles.Left);
                     }
                 }
 
@@ -360,7 +351,8 @@ namespace Poker
                         cardPositionX = 1115;
                         cardPositionY = 65;
 
-                        this.DealCardsToCurrentPlayer(bot4, index, cardPositionX, cardPositionY, 8, 9, AnchorStyles.Top, AnchorStyles.Right);
+                        this.DealCardsToCurrentPlayer(bot4, index, cardPositionX, cardPositionY, 8, 9, AnchorStyles.Top,
+                            AnchorStyles.Right);
                     }
                 }
 
@@ -372,7 +364,8 @@ namespace Poker
                         cardPositionX = 1160;
                         cardPositionY = 420;
 
-                        this.DealCardsToCurrentPlayer(bot5, index, cardPositionX, cardPositionY, 10, 11, AnchorStyles.Bottom, AnchorStyles.Right);
+                        this.DealCardsToCurrentPlayer(bot5, index, cardPositionX, cardPositionY, 10, 11,
+                            AnchorStyles.Bottom, AnchorStyles.Right);
                     }
                 }
             }
@@ -430,15 +423,20 @@ namespace Poker
             cardImageHolder[index].Location = new Point(horizontal, vertical);
         }
 
-        private void DealCardsToCurrentPlayer(IPlayer currentPlayer, int cardIndex, int x, int y, int firstCardBoardNumber, int secondCardBoardNumber, AnchorStyles style1, AnchorStyles style2 = AnchorStyles.None)
+        private void DealCardsToCurrentPlayer(IPlayer currentPlayer, int cardIndex, int x, int y,
+            int firstCardBoardNumber, int secondCardBoardNumber, AnchorStyles style1,
+            AnchorStyles style2 = AnchorStyles.None)
         {
             cardImageHolder[cardIndex].Anchor = (style1 | style2);
-            currentPlayer.Card1 = new Card(x, y, cardDeck[cardIndex], Reserve[cardIndex], cardImageHolder[cardIndex], firstCardBoardNumber);
+            currentPlayer.Card1 = new Card(x, y, cardDeck[cardIndex], Reserve[cardIndex], cardImageHolder[cardIndex],
+                firstCardBoardNumber);
             x += currentPlayer.Card1.CardHolder.Width;
             cardImageHolder[cardIndex + 1].Anchor = (style1 | style2);
-            currentPlayer.Card2 = new Card(x, y, cardDeck[cardIndex + 1], Reserve[cardIndex + 1], cardImageHolder[cardIndex + 1], secondCardBoardNumber);
+            currentPlayer.Card2 = new Card(x, y, cardDeck[cardIndex + 1], Reserve[cardIndex + 1],
+                cardImageHolder[cardIndex + 1], secondCardBoardNumber);
             this.Controls.Add(currentPlayer.Panel);
-            currentPlayer.Panel.Location = new Point(currentPlayer.Card1.CardHolder.Left - 10, currentPlayer.Card1.CardHolder.Top - 10);
+            currentPlayer.Panel.Location = new Point(currentPlayer.Card1.CardHolder.Left - 10,
+                currentPlayer.Card1.CardHolder.Top - 10);
             currentPlayer.Panel.Visible = false;
         }
 
@@ -482,7 +480,7 @@ namespace Poker
                 await AllIn();
                 if (player.GameEnded && !player.HasFolded)
                 {
-                    if (!buttonCall.Text.Contains("All in")|| !buttonRaise.Text.Contains("All in"))
+                    if (!buttonCall.Text.Contains("All in") || !buttonRaise.Text.Contains("All in"))
                     {
                         this.RemovePlayerFromGame(player, 0);
                     }
@@ -510,20 +508,21 @@ namespace Poker
 
                 if (!bot3.GameEnded)
                 {
-                        this.CheckBotActions(bot3, bot4, 3);
+                    this.CheckBotActions(bot3, bot4, 3);
                 }
-               
+
                 if (!bot4.GameEnded)
                 {
-                        this.CheckBotActions(bot4, bot5, 4);
+                    this.CheckBotActions(bot4, bot5, 4);
                 }
 
                 if (!bot5.GameEnded)
                 {
                     this.CheckBotActions(bot5, player, 5);
                 }
-                
+
             #endregion
+
                 await AllIn();
                 if (!restart)
                 {
@@ -568,761 +567,394 @@ namespace Poker
 
         void Rules(IPlayer gamePlayer)
         {
-            if (!gamePlayer.GameEnded || gamePlayer.Card1.CardBoardNumber == 0 && gamePlayer.Card2.CardBoardNumber == 1 && gamePlayer.Status.Text.Contains("Fold") == false)
+            if (!gamePlayer.GameEnded ||
+                gamePlayer.Card1.CardBoardNumber == 0 &&
+                gamePlayer.Card2.CardBoardNumber == 1 &&
+                !gamePlayer.Status.Text.Contains("Fold"))
             {
                 #region Variables
-                bool done = false, vf = false;
-                int[] Straight1 = new int[5];
-                int[] Straight = new int[7];
-                Straight[0] = Reserve[gamePlayer.Card1.CardBoardNumber];
-                Straight[1] = Reserve[gamePlayer.Card2.CardBoardNumber];
-                Straight1[0] = Straight[2] = Reserve[12];
-                Straight1[1] = Straight[3] = Reserve[13];
-                Straight1[2] = Straight[4] = Reserve[14];
-                Straight1[3] = Straight[5] = Reserve[15];
-                Straight1[4] = Straight[6] = Reserve[16];
-                var a = Straight.Where(o => o % 4 == 0).ToArray();
-                var b = Straight.Where(o => o % 4 == 1).ToArray();
-                var c = Straight.Where(o => o % 4 == 2).ToArray();
-                var d = Straight.Where(o => o % 4 == 3).ToArray();
-                var st1 = a.Select(o => o / 4).Distinct().ToArray();
-                var st2 = b.Select(o => o / 4).Distinct().ToArray();
-                var st3 = c.Select(o => o / 4).Distinct().ToArray();
-                var st4 = d.Select(o => o / 4).Distinct().ToArray();
-                Array.Sort(Straight); Array.Sort(st1); Array.Sort(st2); Array.Sort(st3); Array.Sort(st4);
+
+                int[] tableCards = new int[5];
+                tableCards[0] = Reserve[12];
+                tableCards[1] = Reserve[13];
+                tableCards[2] = Reserve[14];
+                tableCards[3] = Reserve[15];
+                tableCards[4] = Reserve[16];
+
+                int[] tableAndPlayerCards = new int[7];
+                tableAndPlayerCards[0] = Reserve[gamePlayer.Card1.CardBoardNumber];
+                tableAndPlayerCards[1] = Reserve[gamePlayer.Card2.CardBoardNumber];
+                tableAndPlayerCards[2] = Reserve[12];
+                tableAndPlayerCards[3] = Reserve[13];
+                tableAndPlayerCards[4] = Reserve[14];
+                tableAndPlayerCards[5] = Reserve[15];
+                tableAndPlayerCards[6] = Reserve[16];
+                Array.Sort(tableAndPlayerCards);
+
+                var spades = tableAndPlayerCards.Where(o => o % 4 == 0).ToArray();
+                var clubs = tableAndPlayerCards.Where(o => o % 4 == 1).ToArray();
+                var diamonds = tableAndPlayerCards.Where(o => o % 4 == 2).ToArray();
+                var hearts = tableAndPlayerCards.Where(o => o % 4 == 3).ToArray();
+
+                var distinctSpades = spades.Select(o => o / 4).Distinct().ToArray();
+                var distinctClubs = clubs.Select(o => o / 4).Distinct().ToArray();
+                var distinctDiamonds = diamonds.Select(o => o / 4).Distinct().ToArray();
+                var distinctHearts = hearts.Select(o => o / 4).Distinct().ToArray();
+                Array.Sort(distinctSpades);
+                Array.Sort(distinctClubs);
+                Array.Sort(distinctDiamonds);
+                Array.Sort(distinctHearts);
+
                 #endregion
+
                 for (i = 0; i < 16; i++)
                 {
-                    if (Reserve[i] == int.Parse(cardImageHolder[gamePlayer.Card1.CardBoardNumber].Tag.ToString()) && Reserve[i + 1] == int.Parse(cardImageHolder[gamePlayer.Card2.CardBoardNumber].Tag.ToString()))
+                    if (Reserve[i] == int.Parse(cardImageHolder[gamePlayer.Card1.CardBoardNumber].Tag.ToString()) &&
+                        Reserve[i + 1] == int.Parse(cardImageHolder[gamePlayer.Card2.CardBoardNumber].Tag.ToString()))
                     {
                         //Pair from Hand currentHandType = 1
-
-                        rPairFromHand(gamePlayer.HandType, gamePlayer.HandPower);
+                        CheckOnePair(gamePlayer.HandType, gamePlayer.HandPower);
 
                         #region Pair or Two Pair from Table currentHandType = 2 || 0
-                        rPairTwoPair(gamePlayer.HandType, gamePlayer.HandPower);
+
+                        CheckTwoPair(gamePlayer.HandType, gamePlayer.HandPower);
+
                         #endregion
 
                         #region Two Pair currentHandType = 2
+
                         rTwoPair(gamePlayer.HandType, gamePlayer.HandPower);
+
                         #endregion
 
                         #region Three of a kind currentHandType = 3
-                        rThreeOfAKind(gamePlayer.HandType, gamePlayer.HandPower, Straight);
+
+                        CheckThreeOfAKind(gamePlayer.HandType, gamePlayer.HandPower, tableAndPlayerCards);
+
                         #endregion
 
-                        #region Straight currentHandType = 4
-                        rStraight(gamePlayer.HandType, gamePlayer.HandPower, Straight);
+                        #region tableAndPlayerCards currentHandType = 4
+
+                        CheckStraight(gamePlayer.HandType, gamePlayer.HandPower, tableAndPlayerCards);
+
                         #endregion
 
                         #region Flush currentHandType = 5 || 5.5
-                        rFlush(gamePlayer.HandType, gamePlayer.HandPower, ref vf, Straight1);
+
+                        CheckRoyalFlush(gamePlayer.HandType, gamePlayer.HandPower, tableCards);
+
                         #endregion
 
                         #region Full House currentHandType = 6
-                        rFullHouse(gamePlayer.HandType, gamePlayer.HandPower, ref done, Straight);
+
+                        CheckFullHouse(gamePlayer.HandType, gamePlayer.HandPower, tableAndPlayerCards);
+
                         #endregion
 
                         #region Four of a Kind currentHandType = 7
-                        rFourOfAKind(gamePlayer.HandType, gamePlayer.HandPower, Straight);
+
+                        CheckFourOfAKind(gamePlayer.HandType, gamePlayer.HandPower, tableAndPlayerCards);
+
                         #endregion
 
-                        #region Straight Flush currentHandType = 8 || 9
-                        rStraightFlush(gamePlayer.HandType, gamePlayer.HandPower, st1, st2, st3, st4);
+                        #region tableAndPlayerCards Flush currentHandType = 8 || 9
+
+                        CheckStraightFlush(gamePlayer.HandType, gamePlayer.HandPower, distinctSpades);
+                        CheckStraightFlush(gamePlayer.HandType, gamePlayer.HandPower, distinctClubs);
+                        CheckStraightFlush(gamePlayer.HandType, gamePlayer.HandPower, distinctDiamonds);
+                        CheckStraightFlush(gamePlayer.HandType, gamePlayer.HandPower, distinctHearts);
+
                         #endregion
 
                         #region High Card currentHandType = -1
-                        rHighCard(gamePlayer.HandType, gamePlayer.HandPower);
+
+                        CheckHighCard(gamePlayer.HandType, gamePlayer.HandPower);
+
                         #endregion
                     }
                 }
             }
         }
-        private void rStraightFlush(double currentHandType, double handPower, int[] st1, int[] st2, int[] st3, int[] st4)
+
+        private void CheckStraightFlush(double currentHandType, double handPower, int[] suit)
         {
             if (currentHandType >= -1)
             {
-                if (st1.Length >= 5)
+                if (suit.Length >= 5)
                 {
-                    if (st1[0] + 4 == st1[4])
+                    if (suit[0] + 4 == suit[4])
                     {
-                        currentHandType = 8;
-                        handPower = (st1.Max()) / 4 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 8 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                        handPower = (suit.Max()) / 4 + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 8);
                     }
-                    if (st1[0] == 0 && st1[1] == 9 && st1[2] == 10 && st1[3] == 11 && st1[0] + 12 == st1[4])
+                    if (suit[0] == 0 && suit[1] == 9 && suit[2] == 10 && suit[3] == 11 && suit[0] + 12 == suit[4])
                     {
-                        currentHandType = 9;
-                        handPower = (st1.Max()) / 4 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 9 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
-                }
-                if (st2.Length >= 5)
-                {
-                    if (st2[0] + 4 == st2[4])
-                    {
-                        currentHandType = 8;
-                        handPower = (st2.Max()) / 4 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 8 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
-                    if (st2[0] == 0 && st2[1] == 9 && st2[2] == 10 && st2[3] == 11 && st2[0] + 12 == st2[4])
-                    {
-                        currentHandType = 9;
-                        handPower = (st2.Max()) / 4 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 9 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
-                }
-                if (st3.Length >= 5)
-                {
-                    if (st3[0] + 4 == st3[4])
-                    {
-                        currentHandType = 8;
-                        handPower = (st3.Max()) / 4 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 8 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
-                    if (st3[0] == 0 && st3[1] == 9 && st3[2] == 10 && st3[3] == 11 && st3[0] + 12 == st3[4])
-                    {
-                        currentHandType = 9;
-                        handPower = (st3.Max()) / 4 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 9 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
-                }
-                if (st4.Length >= 5)
-                {
-                    if (st4[0] + 4 == st4[4])
-                    {
-                        currentHandType = 8;
-                        handPower = (st4.Max()) / 4 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 8 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
-                    if (st4[0] == 0 && st4[1] == 9 && st4[2] == 10 && st4[3] == 11 && st4[0] + 12 == st4[4])
-                    {
-                        currentHandType = 9;
-                        handPower = (st4.Max()) / 4 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 9 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                        handPower = (suit.Max()) / 4 + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 9);
                     }
                 }
             }
         }
 
-        private void rFourOfAKind(double currentHandType, double handPower, int[] Straight)
+        private void CheckFourOfAKind(double currentHandType, double handPower, int[] tableAndPlayerCards)
         {
             if (currentHandType >= -1)
             {
                 for (int j = 0; j <= 3; j++)
                 {
-                    if (Straight[j] / 4 == Straight[j + 1] / 4 && Straight[j] / 4 == Straight[j + 2] / 4 &&
-                        Straight[j] / 4 == Straight[j + 3] / 4)
+                    if (tableAndPlayerCards[j] / 4 == tableAndPlayerCards[j + 1] / 4 &&
+                        tableAndPlayerCards[j] / 4 == tableAndPlayerCards[j + 2] / 4 &&
+                        tableAndPlayerCards[j] / 4 == tableAndPlayerCards[j + 3] / 4)
                     {
-                        currentHandType = 7;
-                        handPower = (Straight[j] / 4) * 4 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 7 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                        handPower = (tableAndPlayerCards[j] / 4) * 4 + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 7);
                     }
-                    if (Straight[j] / 4 == 0 && Straight[j + 1] / 4 == 0 && Straight[j + 2] / 4 == 0 && Straight[j + 3] / 4 == 0)
+                    if (tableAndPlayerCards[j] / 4 == 0 &&
+                        tableAndPlayerCards[j + 1] / 4 == 0 &&
+                        tableAndPlayerCards[j + 2] / 4 == 0 &&
+                        tableAndPlayerCards[j + 3] / 4 == 0)
                     {
-                        currentHandType = 7;
                         handPower = 13 * 4 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 7 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 7);
                     }
                 }
             }
         }
 
-        private void rFullHouse(double currentHandType, double handPower, ref bool done, int[] Straight)
+        private void CheckFullHouse(double currentHandType, double handPower, int[] tableAndPlayerCards)
         {
             if (currentHandType >= -1)
             {
-                type = handPower;
-                for (int j = 0; j <= 12; j++)
+                bool isPair = false;
+                for (int playersCardsIndex = 0; playersCardsIndex <= 12; playersCardsIndex++)
                 {
-                    var fh = Straight.Where(o => o / 4 == j).ToArray();
-                    if (fh.Length == 3 || done)
+                    var cardsOfAKind = tableAndPlayerCards.Where(o => o / 4 == playersCardsIndex).ToArray();
+                    if (cardsOfAKind.Length == 3 || isPair)
                     {
-                        if (fh.Length == 2)
+                        if (cardsOfAKind.Length == 2)
                         {
-                            if (fh.Max() / 4 == 0)
+                            if (cardsOfAKind.Max() / 4 == 0)
                             {
-                                currentHandType = 6;
                                 handPower = 13 * 2 + currentHandType * 100;
-                                Win.Add(new Type() { Power = handPower, Current = 6 });
-                                sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                                this.AddHandToWinningHandsList(currentHandType, handPower, 6);
                                 break;
                             }
-                            if (fh.Max() / 4 > 0)
+                            if (cardsOfAKind.Max() / 4 > 0)
                             {
-                                currentHandType = 6;
-                                handPower = fh.Max() / 4 * 2 + currentHandType * 100;
-                                Win.Add(new Type() { Power = handPower, Current = 6 });
-                                sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                                handPower = cardsOfAKind.Max() / 4 * 2 + currentHandType * 100;
+                                this.AddHandToWinningHandsList(currentHandType, handPower, 6);
                                 break;
                             }
                         }
-                        if (!done)
+                        if (!isPair)
                         {
-                            if (fh.Max() / 4 == 0)
+                            if (cardsOfAKind.Max() / 4 == 0)
                             {
                                 handPower = 13;
-                                done = true;
-                                j = -1;
+                                isPair = true;
+                                playersCardsIndex = -1;
                             }
                             else
                             {
-                                handPower = fh.Max() / 4;
-                                done = true;
-                                j = -1;
+                                handPower = cardsOfAKind.Max() / 4;
+                                isPair = true;
+                                playersCardsIndex = -1;
                             }
                         }
                     }
                 }
-                if (currentHandType != 6)
-                {
-                    handPower = type;
-                }
             }
         }
 
-        private void rFlush(double currentHandType, double handPower, ref bool vf, int[] Straight1)
+        private void CheckRoyalFlush(double currentHandType, double handPower, int[] tableCards)
         {
             if (currentHandType >= -1)
             {
-                var f1 = Straight1.Where(o => o % 4 == 0).ToArray();
-                var f2 = Straight1.Where(o => o % 4 == 1).ToArray();
-                var f3 = Straight1.Where(o => o % 4 == 2).ToArray();
-                var f4 = Straight1.Where(o => o % 4 == 3).ToArray();
-                if (f1.Length == 3 || f1.Length == 4)
-                {
-                    if (Reserve[i] % 4 == Reserve[i + 1] % 4 && Reserve[i] % 4 == f1[0] % 4)
-                    {
-                        if (Reserve[i] / 4 > f1.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        if (Reserve[i + 1] / 4 > f1.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i + 1] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else if (Reserve[i] / 4 < f1.Max() / 4 && Reserve[i + 1] / 4 < f1.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = f1.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                }
-                if (f1.Length == 4)//different cards in hand
-                {
-                    if (Reserve[i] % 4 != Reserve[i + 1] % 4 && Reserve[i] % 4 == f1[0] % 4)
-                    {
-                        if (Reserve[i] / 4 > f1.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else
-                        {
-                            currentHandType = 5;
-                            handPower = f1.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                    if (Reserve[i + 1] % 4 != Reserve[i] % 4 && Reserve[i + 1] % 4 == f1[0] % 4)
-                    {
-                        if (Reserve[i + 1] / 4 > f1.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i + 1] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else
-                        {
-                            currentHandType = 5;
-                            handPower = f1.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                }
-                if (f1.Length == 5)
-                {
-                    if (Reserve[i] % 4 == f1[0] % 4 && Reserve[i] / 4 > f1.Min() / 4)
-                    {
-                        currentHandType = 5;
-                        handPower = Reserve[i] + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                    if (Reserve[i + 1] % 4 == f1[0] % 4 && Reserve[i + 1] / 4 > f1.Min() / 4)
-                    {
-                        currentHandType = 5;
-                        handPower = Reserve[i + 1] + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                    else if (Reserve[i] / 4 < f1.Min() / 4 && Reserve[i + 1] / 4 < f1.Min())
-                    {
-                        currentHandType = 5;
-                        handPower = f1.Max() + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                }
+                var spadesCards = tableCards.Where(o => o % 4 == 0).ToArray();
+                var clubsCards = tableCards.Where(o => o % 4 == 1).ToArray();
+                var diamondsCards = tableCards.Where(o => o % 4 == 2).ToArray();
+                var heartsCards = tableCards.Where(o => o % 4 == 3).ToArray();
 
-                if (f2.Length == 3 || f2.Length == 4)
-                {
-                    if (Reserve[i] % 4 == Reserve[i + 1] % 4 && Reserve[i] % 4 == f2[0] % 4)
-                    {
-                        if (Reserve[i] / 4 > f2.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        if (Reserve[i + 1] / 4 > f2.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i + 1] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else if (Reserve[i] / 4 < f2.Max() / 4 && Reserve[i + 1] / 4 < f2.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = f2.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                }
-                if (f2.Length == 4)//different cards in hand
-                {
-                    if (Reserve[i] % 4 != Reserve[i + 1] % 4 && Reserve[i] % 4 == f2[0] % 4)
-                    {
-                        if (Reserve[i] / 4 > f2.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else
-                        {
-                            currentHandType = 5;
-                            handPower = f2.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                    if (Reserve[i + 1] % 4 != Reserve[i] % 4 && Reserve[i + 1] % 4 == f2[0] % 4)
-                    {
-                        if (Reserve[i + 1] / 4 > f2.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i + 1] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else
-                        {
-                            currentHandType = 5;
-                            handPower = f2.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                }
-                if (f2.Length == 5)
-                {
-                    if (Reserve[i] % 4 == f2[0] % 4 && Reserve[i] / 4 > f2.Min() / 4)
-                    {
-                        currentHandType = 5;
-                        handPower = Reserve[i] + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                    if (Reserve[i + 1] % 4 == f2[0] % 4 && Reserve[i + 1] / 4 > f2.Min() / 4)
-                    {
-                        currentHandType = 5;
-                        handPower = Reserve[i + 1] + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                    else if (Reserve[i] / 4 < f2.Min() / 4 && Reserve[i + 1] / 4 < f2.Min())
-                    {
-                        currentHandType = 5;
-                        handPower = f2.Max() + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                }
+                bool isSpadesFlush = CheckSuit(currentHandType, handPower, spadesCards);
+                bool isClubsFlush = CheckSuit(currentHandType, handPower, clubsCards);
+                bool isDiamondsFlush = CheckSuit(currentHandType, handPower, diamondsCards);
+                bool isHeartsFlush = CheckSuit(currentHandType, handPower, heartsCards);
 
-                if (f3.Length == 3 || f3.Length == 4)
-                {
-                    if (Reserve[i] % 4 == Reserve[i + 1] % 4 && Reserve[i] % 4 == f3[0] % 4)
-                    {
-                        if (Reserve[i] / 4 > f3.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        if (Reserve[i + 1] / 4 > f3.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i + 1] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else if (Reserve[i] / 4 < f3.Max() / 4 && Reserve[i + 1] / 4 < f3.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = f3.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                }
-                if (f3.Length == 4)//different cards in hand
-                {
-                    if (Reserve[i] % 4 != Reserve[i + 1] % 4 && Reserve[i] % 4 == f3[0] % 4)
-                    {
-                        if (Reserve[i] / 4 > f3.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else
-                        {
-                            currentHandType = 5;
-                            handPower = f3.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                    if (Reserve[i + 1] % 4 != Reserve[i] % 4 && Reserve[i + 1] % 4 == f3[0] % 4)
-                    {
-                        if (Reserve[i + 1] / 4 > f3.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i + 1] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else
-                        {
-                            currentHandType = 5;
-                            handPower = f3.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                }
-                if (f3.Length == 5)
-                {
-                    if (Reserve[i] % 4 == f3[0] % 4 && Reserve[i] / 4 > f3.Min() / 4)
-                    {
-                        currentHandType = 5;
-                        handPower = Reserve[i] + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                    if (Reserve[i + 1] % 4 == f3[0] % 4 && Reserve[i + 1] / 4 > f3.Min() / 4)
-                    {
-                        currentHandType = 5;
-                        handPower = Reserve[i + 1] + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                    else if (Reserve[i] / 4 < f3.Min() / 4 && Reserve[i + 1] / 4 < f3.Min())
-                    {
-                        currentHandType = 5;
-                        handPower = f3.Max() + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                }
-
-                if (f4.Length == 3 || f4.Length == 4)
-                {
-                    if (Reserve[i] % 4 == Reserve[i + 1] % 4 && Reserve[i] % 4 == f4[0] % 4)
-                    {
-                        if (Reserve[i] / 4 > f4.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        if (Reserve[i + 1] / 4 > f4.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i + 1] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else if (Reserve[i] / 4 < f4.Max() / 4 && Reserve[i + 1] / 4 < f4.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = f4.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                }
-                if (f4.Length == 4)//different cards in hand
-                {
-                    if (Reserve[i] % 4 != Reserve[i + 1] % 4 && Reserve[i] % 4 == f4[0] % 4)
-                    {
-                        if (Reserve[i] / 4 > f4.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else
-                        {
-                            currentHandType = 5;
-                            handPower = f4.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                    if (Reserve[i + 1] % 4 != Reserve[i] % 4 && Reserve[i + 1] % 4 == f4[0] % 4)
-                    {
-                        if (Reserve[i + 1] / 4 > f4.Max() / 4)
-                        {
-                            currentHandType = 5;
-                            handPower = Reserve[i + 1] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                        else
-                        {
-                            currentHandType = 5;
-                            handPower = f4.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 5 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                            vf = true;
-                        }
-                    }
-                }
-                if (f4.Length == 5)
-                {
-                    if (Reserve[i] % 4 == f4[0] % 4 && Reserve[i] / 4 > f4.Min() / 4)
-                    {
-                        currentHandType = 5;
-                        handPower = Reserve[i] + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                    if (Reserve[i + 1] % 4 == f4[0] % 4 && Reserve[i + 1] / 4 > f4.Min() / 4)
-                    {
-                        currentHandType = 5;
-                        handPower = Reserve[i + 1] + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                    else if (Reserve[i] / 4 < f4.Min() / 4 && Reserve[i + 1] / 4 < f4.Min())
-                    {
-                        currentHandType = 5;
-                        handPower = f4.Max() + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                        vf = true;
-                    }
-                }
                 //ace
-                if (f1.Length > 0)
+                if (spadesCards.Length > 0)
                 {
-                    if (Reserve[i] / 4 == 0 && Reserve[i] % 4 == f1[0] % 4 && vf && f1.Length > 0)
-                    {
-                        currentHandType = 5.5;
-                        handPower = 13 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5.5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
-                    if (Reserve[i + 1] / 4 == 0 && Reserve[i + 1] % 4 == f1[0] % 4 && vf && f1.Length > 0)
-                    {
-                        currentHandType = 5.5;
-                        handPower = 13 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5.5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
+                    CheckSuitRoyalFlush(currentHandType, handPower, isSpadesFlush, spadesCards);
                 }
-                if (f2.Length > 0)
+                if (clubsCards.Length > 0)
                 {
-                    if (Reserve[i] / 4 == 0 && Reserve[i] % 4 == f2[0] % 4 && vf && f2.Length > 0)
-                    {
-                        currentHandType = 5.5;
-                        handPower = 13 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5.5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
-                    if (Reserve[i + 1] / 4 == 0 && Reserve[i + 1] % 4 == f2[0] % 4 && vf && f2.Length > 0)
-                    {
-                        currentHandType = 5.5;
-                        handPower = 13 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5.5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
+                    CheckSuitRoyalFlush(currentHandType, handPower, isClubsFlush, clubsCards);
                 }
-                if (f3.Length > 0)
+                if (diamondsCards.Length > 0)
                 {
-                    if (Reserve[i] / 4 == 0 && Reserve[i] % 4 == f3[0] % 4 && vf && f3.Length > 0)
-                    {
-                        currentHandType = 5.5;
-                        handPower = 13 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5.5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
-                    if (Reserve[i + 1] / 4 == 0 && Reserve[i + 1] % 4 == f3[0] % 4 && vf && f3.Length > 0)
-                    {
-                        currentHandType = 5.5;
-                        handPower = 13 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5.5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
+                    CheckSuitRoyalFlush(currentHandType, handPower, isDiamondsFlush, diamondsCards);
                 }
-                if (f4.Length > 0)
+                if (heartsCards.Length > 0)
                 {
-                    if (Reserve[i] / 4 == 0 && Reserve[i] % 4 == f4[0] % 4 && vf && f4.Length > 0)
-                    {
-                        currentHandType = 5.5;
-                        handPower = 13 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5.5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
-                    if (Reserve[i + 1] / 4 == 0 && Reserve[i + 1] % 4 == f4[0] % 4 && vf)
-                    {
-                        currentHandType = 5.5;
-                        handPower = 13 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 5.5 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
-                    }
+                    CheckSuitRoyalFlush(currentHandType, handPower, isHeartsFlush, heartsCards);
                 }
             }
         }
 
-        private void rStraight(double currentHandType, double handPower, int[] Straight)
+        private void CheckSuitRoyalFlush(double currentHandType, double handPower, bool isFlush, int[] suit)
+        {
+            if (isFlush &&
+                Reserve[i] / 4 == 0 &&
+                Reserve[i] % 4 == suit[0] % 4)
+            {
+                handPower = 13 + currentHandType * 100;
+                this.AddHandToWinningHandsList(currentHandType, handPower, 5.5);
+            }
+            if (Reserve[i + 1] / 4 == 0 &&
+                Reserve[i + 1] % 4 == suit[0] % 4 &&
+                isFlush &&
+                suit.Length > 0)
+            {
+                handPower = 13 + currentHandType * 100;
+                this.AddHandToWinningHandsList(currentHandType, handPower, 5.5);
+            }
+        }
+
+        private bool CheckSuit(double currentHandType, double handPower, int[] suit)
+        {
+            bool isFlush = false;
+            if (suit.Length == 3 || suit.Length == 4)
+            {
+                if (Reserve[i] % 4 == Reserve[i + 1] % 4 && Reserve[i] % 4 == suit[0] % 4)
+                {
+                    if (Reserve[i] / 4 > suit.Max() / 4)
+                    {
+                        handPower = Reserve[i] + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 5);
+                        isFlush = true;
+                    }
+                    if (Reserve[i + 1] / 4 > suit.Max() / 4)
+                    {
+                        handPower = Reserve[i + 1] + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 5);
+                        isFlush = true;
+                    }
+                    else if (Reserve[i] / 4 < suit.Max() / 4 && Reserve[i + 1] / 4 < suit.Max() / 4)
+                    {
+                        handPower = suit.Max() + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 5);
+                        isFlush = true;
+                    }
+                }
+            }
+            if (suit.Length == 4) //different cards in hand
+            {
+                if (Reserve[i] % 4 != Reserve[i + 1] % 4 && Reserve[i] % 4 == suit[0] % 4)
+                {
+                    if (Reserve[i] / 4 > suit.Max() / 4)
+                    {
+                        handPower = Reserve[i] + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 5);
+                        isFlush = true;
+                    }
+                    else
+                    {
+                        handPower = suit.Max() + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 5);
+                        isFlush = true;
+                    }
+                }
+
+                if (Reserve[i + 1] % 4 != Reserve[i] % 4 && Reserve[i + 1] % 4 == suit[0] % 4)
+                {
+                    if (Reserve[i + 1] / 4 > suit.Max() / 4)
+                    {
+                        handPower = Reserve[i + 1] + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 5);
+                        isFlush = true;
+                    }
+                    else
+                    {
+                        handPower = suit.Max() + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 5);
+                        isFlush = true;
+                    }
+                }
+            }
+            if (suit.Length == 5)
+            {
+                if (Reserve[i] % 4 == suit[0] % 4 && Reserve[i] / 4 > suit.Min() / 4)
+                {
+                    handPower = Reserve[i] + currentHandType * 100;
+                    this.AddHandToWinningHandsList(currentHandType, handPower, 5);
+                    isFlush = true;
+                }
+                if (Reserve[i + 1] % 4 == suit[0] % 4 && Reserve[i + 1] / 4 > suit.Min() / 4)
+                {
+                    handPower = Reserve[i + 1] + currentHandType * 100;
+                    this.AddHandToWinningHandsList(currentHandType, handPower, 5);
+                    isFlush = true;
+                }
+                else if (Reserve[i] / 4 < suit.Min() / 4 && Reserve[i + 1] / 4 < suit.Min())
+                {
+                    handPower = suit.Max() + currentHandType * 100;
+                    this.AddHandToWinningHandsList(currentHandType, handPower, 5);
+                    isFlush = true;
+                }
+            }
+            return isFlush;
+        }
+
+        private void CheckStraight(double currentHandType, double handPower, int[] tableAndPlayerCards)
         {
             if (currentHandType >= -1)
             {
-                var op = Straight.Select(o => o / 4).Distinct().ToArray();
-                for (int j = 0; j < op.Length - 4; j++)
+                var diffrentKindCards = tableAndPlayerCards.Select(o => o / 4).Distinct().ToArray();
+                for (int j = 0; j < diffrentKindCards.Length - 4; j++)
                 {
-                    if (op[j] + 4 == op[j + 4])
+                    if (diffrentKindCards[j] + 4 == diffrentKindCards[j + 4])
                     {
-                        if (op.Max() - 4 == op[j])
+                        if (diffrentKindCards.Max() - 4 == diffrentKindCards[j])
                         {
-                            currentHandType = 4;
-                            handPower = op.Max() + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 4 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                            handPower = diffrentKindCards.Max() + currentHandType * 100;
+                            this.AddHandToWinningHandsList(currentHandType, handPower, 4);
                         }
                         else
                         {
-                            currentHandType = 4;
-                            handPower = op[j + 4] + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 4 });
-                            sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                            handPower = diffrentKindCards[j + 4] + currentHandType * 100;
+                            this.AddHandToWinningHandsList(currentHandType, handPower, 4);
                         }
                     }
-                    if (op[j] == 0 && op[j + 1] == 9 && op[j + 2] == 10 && op[j + 3] == 11 && op[j + 4] == 12)
+                    if (diffrentKindCards[j] == 0 &&
+                        diffrentKindCards[j + 1] == 9 &&
+                        diffrentKindCards[j + 2] == 10 &&
+                        diffrentKindCards[j + 3] == 11 &&
+                        diffrentKindCards[j + 4] == 12)
                     {
-                        currentHandType = 4;
                         handPower = 13 + currentHandType * 100;
-                        Win.Add(new Type() { Power = handPower, Current = 4 });
-                        sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 4);
                     }
                 }
             }
         }
 
-        private void rThreeOfAKind(double currentHandType, double handPower, int[] Straight)
+        private void CheckThreeOfAKind(double currentHandType, double handPower, int[] tableAndPlayerCards)
         {
             if (currentHandType >= -1)
             {
-                for (int j = 0; j <= 12; j++)
+                for (int playersCardsIndex = 0; playersCardsIndex <= 12; playersCardsIndex++)
                 {
-                    var fh = Straight.Where(o => o / 4 == j).ToArray();
-                    if (fh.Length == 3)
+                    var cardsOfAKind = tableAndPlayerCards.Where(o => o / 4 == playersCardsIndex).ToArray();
+                    if (cardsOfAKind.Length == 3)
                     {
-                        if (fh.Max() / 4 == 0)
+                        if (cardsOfAKind.Max() / 4 == 0)
                         {
-                            currentHandType = 3;
                             handPower = 13 * 3 + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 3 });
-                            sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
+                            this.AddHandToWinningHandsList(currentHandType, handPower, 3);
                         }
                         else
                         {
-                            currentHandType = 3;
-                            handPower = fh[0] / 4 + fh[1] / 4 + fh[2] / 4 + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 3 });
-                            sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
+                            handPower = cardsOfAKind[0] / 4 + cardsOfAKind[1] / 4 + cardsOfAKind[2] / 4 + currentHandType * 100;
+                            this.AddHandToWinningHandsList(currentHandType, handPower, 3);
                         }
                     }
                 }
@@ -1333,48 +965,31 @@ namespace Poker
         {
             if (currentHandType >= -1)
             {
-                bool msgbox = false;
-                for (int tc = 16; tc >= 12; tc--)
+                for (int tableCardIndex = 16; tableCardIndex >= 12; tableCardIndex--)
                 {
-                    int max = tc - 12;
                     if (Reserve[i] / 4 != Reserve[i + 1] / 4)
                     {
-                        for (int k = 1; k <= max; k++)
+                        for (int index = 1; index <= tableCardIndex - 12; index++)
                         {
-                            if (tc - k < 12)
+                            if (Reserve[i] / 4 == Reserve[tableCardIndex] / 4 &&
+                                Reserve[i + 1] / 4 == Reserve[tableCardIndex - index] / 4 ||
+                                Reserve[i + 1] / 4 == Reserve[tableCardIndex] / 4 &&
+                                Reserve[i] / 4 == Reserve[tableCardIndex - index] / 4)
                             {
-                                max--;
-                            }
-                            if (tc - k >= 12)
-                            {
-                                if (Reserve[i] / 4 == Reserve[tc] / 4 && Reserve[i + 1] / 4 == Reserve[tc - k] / 4 ||
-                                    Reserve[i + 1] / 4 == Reserve[tc] / 4 && Reserve[i] / 4 == Reserve[tc - k] / 4)
+                                if (Reserve[i] / 4 == 0)
                                 {
-                                    if (!msgbox)
-                                    {
-                                        if (Reserve[i] / 4 == 0)
-                                        {
-                                            currentHandType = 2;
-                                            handPower = 13 * 4 + (Reserve[i + 1] / 4) * 2 + currentHandType * 100;
-                                            Win.Add(new Type() { Power = handPower, Current = 2 });
-                                            sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                                        }
-                                        if (Reserve[i + 1] / 4 == 0)
-                                        {
-                                            currentHandType = 2;
-                                            handPower = 13 * 4 + (Reserve[i] / 4) * 2 + currentHandType * 100;
-                                            Win.Add(new Type() { Power = handPower, Current = 2 });
-                                            sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                                        }
-                                        if (Reserve[i + 1] / 4 != 0 && Reserve[i] / 4 != 0)
-                                        {
-                                            currentHandType = 2;
-                                            handPower = (Reserve[i] / 4) * 2 + (Reserve[i + 1] / 4) * 2 + currentHandType * 100;
-                                            Win.Add(new Type() { Power = handPower, Current = 2 });
-                                            sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                                        }
-                                    }
-                                    msgbox = true;
+                                    handPower = 13 * 4 + (Reserve[i + 1] / 4) * 2 + currentHandType * 100;
+                                    this.AddHandToWinningHandsList(currentHandType, handPower, 2);
+                                }
+                                if (Reserve[i + 1] / 4 == 0)
+                                {
+                                    handPower = 13 * 4 + (Reserve[i] / 4) * 2 + currentHandType * 100;
+                                    this.AddHandToWinningHandsList(currentHandType, handPower, 2);
+                                }
+                                if (Reserve[i + 1] / 4 != 0 && Reserve[i] / 4 != 0)
+                                {
+                                    handPower = (Reserve[i] / 4) * 2 + (Reserve[i + 1] / 4) * 2 + currentHandType * 100;
+                                    this.AddHandToWinningHandsList(currentHandType, handPower, 2);
                                 }
                             }
                         }
@@ -1383,100 +998,80 @@ namespace Poker
             }
         }
 
-        private void rPairTwoPair(double currentHandType, double handPower)
+        private void CheckTwoPair(double currentHandType, double handPower)
         {
             if (currentHandType >= -1)
             {
-                bool msgbox = false;
-                bool msgbox1 = false;
-                for (int tc = 16; tc >= 12; tc--)
+                for (int tableCardIndex = 16; tableCardIndex >= 12; tableCardIndex--)
                 {
-                    int max = tc - 12;
-                    for (int k = 1; k <= max; k++)
+                    for (int index = 1; index <= tableCardIndex - 12; index++)
                     {
-                        if (tc - k < 12)
+                        if (Reserve[tableCardIndex] / 4 == Reserve[tableCardIndex - index] / 4)
                         {
-                            max--;
-                        }
-                        if (tc - k >= 12)
-                        {
-                            if (Reserve[tc] / 4 == Reserve[tc - k] / 4)
+                            if (Reserve[tableCardIndex] / 4 != Reserve[i] / 4 &&
+                                Reserve[tableCardIndex] / 4 != Reserve[i + 1] / 4 &&
+                                currentHandType == 1)
                             {
-                                if (Reserve[tc] / 4 != Reserve[i] / 4 && Reserve[tc] / 4 != Reserve[i + 1] / 4 && currentHandType == 1)
+                                if (Reserve[i + 1] / 4 == 0)
                                 {
-                                    if (!msgbox)
-                                    {
-                                        if (Reserve[i + 1] / 4 == 0)
-                                        {
-                                            currentHandType = 2;
-                                            handPower = (Reserve[i] / 4) * 2 + 13 * 4 + currentHandType * 100;
-                                            Win.Add(new Type() { Power = handPower, Current = 2 });
-                                            sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                                        }
-                                        if (Reserve[i] / 4 == 0)
-                                        {
-                                            currentHandType = 2;
-                                            handPower = (Reserve[i + 1] / 4) * 2 + 13 * 4 + currentHandType * 100;
-                                            Win.Add(new Type() { Power = handPower, Current = 2 });
-                                            sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                                        }
-                                        if (Reserve[i + 1] / 4 != 0)
-                                        {
-                                            currentHandType = 2;
-                                            handPower = (Reserve[tc] / 4) * 2 + (Reserve[i + 1] / 4) * 2 + currentHandType * 100;
-                                            Win.Add(new Type() { Power = handPower, Current = 2 });
-                                            sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                                        }
-                                        if (Reserve[i] / 4 != 0)
-                                        {
-                                            currentHandType = 2;
-                                            handPower = (Reserve[tc] / 4) * 2 + (Reserve[i] / 4) * 2 + currentHandType * 100;
-                                            Win.Add(new Type() { Power = handPower, Current = 2 });
-                                            sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                                        }
-                                    }
-                                    msgbox = true;
+                                    handPower = (Reserve[i] / 4) * 2 +
+                                        13 * 4 +
+                                        currentHandType * 100;
+                                    this.AddHandToWinningHandsList(currentHandType, handPower, 2);
                                 }
-                                if (currentHandType == -1)
+                                if (Reserve[i] / 4 == 0)
                                 {
-                                    if (!msgbox1)
+                                    handPower = (Reserve[i + 1] / 4) * 2 +
+                                        13 * 4 +
+                                        currentHandType * 100;
+                                    this.AddHandToWinningHandsList(currentHandType, handPower, 2);
+                                }
+                                if (Reserve[i + 1] / 4 != 0)
+                                {
+                                    handPower = (Reserve[tableCardIndex] / 4) * 2 +
+                                        (Reserve[i + 1] / 4) * 2 +
+                                        currentHandType * 100;
+                                    this.AddHandToWinningHandsList(currentHandType, handPower, 2);
+                                }
+                                if (Reserve[i] / 4 != 0)
+                                {
+                                    handPower = (Reserve[tableCardIndex] / 4) * 2 +
+                                        (Reserve[i] / 4) * 2 +
+                                        currentHandType * 100;
+                                    this.AddHandToWinningHandsList(currentHandType, handPower, 2);
+                                }
+                            }
+                            if (currentHandType == -1)
+                            {
+                                if (Reserve[i] / 4 > Reserve[i + 1] / 4)
+                                {
+                                    if (Reserve[tableCardIndex] / 4 == 0)
                                     {
-                                        if (Reserve[i] / 4 > Reserve[i + 1] / 4)
-                                        {
-                                            if (Reserve[tc] / 4 == 0)
-                                            {
-                                                currentHandType = 0;
-                                                handPower = 13 + Reserve[i] / 4 + currentHandType * 100;
-                                                Win.Add(new Type() { Power = handPower, Current = 1 });
-                                                sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                                            }
-                                            else
-                                            {
-                                                currentHandType = 0;
-                                                handPower = Reserve[tc] / 4 + Reserve[i] / 4 + currentHandType * 100;
-                                                Win.Add(new Type() { Power = handPower, Current = 1 });
-                                                sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                                            }
-                                        }
-                                        else
-                                        {
-                                            if (Reserve[tc] / 4 == 0)
-                                            {
-                                                currentHandType = 0;
-                                                handPower = 13 + Reserve[i + 1] + currentHandType * 100;
-                                                Win.Add(new Type() { Power = handPower, Current = 1 });
-                                                sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                                            }
-                                            else
-                                            {
-                                                currentHandType = 0;
-                                                handPower = Reserve[tc] / 4 + Reserve[i + 1] / 4 + currentHandType * 100;
-                                                Win.Add(new Type() { Power = handPower, Current = 1 });
-                                                sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                                            }
-                                        }
+                                        handPower = 13 + Reserve[i] / 4 + currentHandType * 100;
+                                        this.AddHandToWinningHandsList(currentHandType, handPower, 0);
                                     }
-                                    msgbox1 = true;
+                                    else
+                                    {
+                                        handPower = Reserve[tableCardIndex] / 4 +
+                                            Reserve[i] / 4 +
+                                            currentHandType * 100;
+                                        this.AddHandToWinningHandsList(currentHandType, handPower, 0);
+                                    }
+                                }
+                                else
+                                {
+                                    if (Reserve[tableCardIndex] / 4 == 0)
+                                    {
+                                        handPower = 13 + Reserve[i + 1] + currentHandType * 100;
+                                        this.AddHandToWinningHandsList(currentHandType, handPower, 0);
+                                    }
+                                    else
+                                    {
+                                        handPower = Reserve[tableCardIndex] / 4 +
+                                            Reserve[i + 1] / 4 +
+                                            currentHandType * 100;
+                                        this.AddHandToWinningHandsList(currentHandType, handPower, 0);
+                                    }
                                 }
                             }
                         }
@@ -1485,105 +1080,93 @@ namespace Poker
             }
         }
 
-        private void rPairFromHand(double currentHandType, double handPower)
+        private void CheckOnePair(double currentHandType, double handPower)
         {
             if (currentHandType >= -1)
             {
-                bool msgbox = false;
                 if (Reserve[i] / 4 == Reserve[i + 1] / 4)
                 {
-                    if (!msgbox)
+                    if (Reserve[i] / 4 == 0)
                     {
-                        if (Reserve[i] / 4 == 0)
-                        {
-                            currentHandType = 1;
-                            handPower = 13 * 4 + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 1 });
-                            sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                        }
-                        else
-                        {
-                            currentHandType = 1;
-                            handPower = (Reserve[i + 1] / 4) * 4 + currentHandType * 100;
-                            Win.Add(new Type() { Power = handPower, Current = 1 });
-                            sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
-                        }
+                        handPower = 13 * 4 + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 1);
                     }
-                    msgbox = true;
-                }
-                for (int tc = 16; tc >= 12; tc--)
-                {
-                    if (Reserve[i + 1] / 4 == Reserve[tc] / 4)
+                    else
                     {
-                        if (!msgbox)
+                        handPower = (Reserve[i + 1] / 4) * 4 + currentHandType * 100;
+                        this.AddHandToWinningHandsList(currentHandType, handPower, 1);
+                    }
+                }
+                else
+                {
+                    for (int tableCardIndex = 16; tableCardIndex >= 12; tableCardIndex--)
+                    {
+                        if (Reserve[i + 1] / 4 == Reserve[tableCardIndex] / 4)
                         {
                             if (Reserve[i + 1] / 4 == 0)
                             {
-                                currentHandType = 1;
                                 handPower = 13 * 4 + Reserve[i] / 4 + currentHandType * 100;
-                                Win.Add(new Type() { Power = handPower, Current = 1 });
-                                sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
+                                this.AddHandToWinningHandsList(currentHandType, handPower, 1);
                             }
                             else
                             {
-                                currentHandType = 1;
                                 handPower = (Reserve[i + 1] / 4) * 4 + Reserve[i] / 4 + currentHandType * 100;
-                                Win.Add(new Type() { Power = handPower, Current = 1 });
-                                sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
+                                this.AddHandToWinningHandsList(currentHandType, handPower, 1);
                             }
                         }
-                        msgbox = true;
-                    }
-                    if (Reserve[i] / 4 == Reserve[tc] / 4)
-                    {
-                        if (!msgbox)
+
+                        if (Reserve[i] / 4 == Reserve[tableCardIndex] / 4)
                         {
                             if (Reserve[i] / 4 == 0)
                             {
-                                currentHandType = 1;
                                 handPower = 13 * 4 + Reserve[i + 1] / 4 + currentHandType * 100;
-                                Win.Add(new Type() { Power = handPower, Current = 1 });
-                                sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
+                                this.AddHandToWinningHandsList(currentHandType, handPower, 1);
                             }
                             else
                             {
-                                currentHandType = 1;
-                                handPower = (Reserve[tc] / 4) * 4 + Reserve[i + 1] / 4 + currentHandType * 100;
-                                Win.Add(new Type() { Power = handPower, Current = 1 });
-                                sorted = Win.OrderByDescending(op => op.Current).ThenByDescending(op => op.Power).First();
+                                handPower = (Reserve[tableCardIndex] / 4) * 4 + Reserve[i + 1] / 4 + currentHandType * 100;
+                                this.AddHandToWinningHandsList(currentHandType, handPower, 1);
                             }
                         }
-                        msgbox = true;
                     }
                 }
             }
         }
-        private void rHighCard(double currentHandType, double handPower)
+
+        private void CheckHighCard(double currentHandType, double handPower)
         {
             if (currentHandType == -1)
             {
                 if (Reserve[i] / 4 > Reserve[i + 1] / 4)
                 {
-                    currentHandType = -1;
                     handPower = Reserve[i] / 4;
-                    Win.Add(new Type() { Power = handPower, Current = -1 });
-                    sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                    this.AddHandToWinningHandsList(currentHandType, handPower, -1);
                 }
                 else
                 {
-                    currentHandType = -1;
                     handPower = Reserve[i + 1] / 4;
-                    Win.Add(new Type() { Power = handPower, Current = -1 });
-                    sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                    this.AddHandToWinningHandsList(currentHandType, handPower, -1);
                 }
                 if (Reserve[i] / 4 == 0 || Reserve[i + 1] / 4 == 0)
                 {
-                    currentHandType = -1;
                     handPower = 13;
-                    Win.Add(new Type() { Power = handPower, Current = -1 });
-                    sorted = Win.OrderByDescending(op1 => op1.Current).ThenByDescending(op1 => op1.Power).First();
+                    this.AddHandToWinningHandsList(currentHandType, handPower, -1);
                 }
             }
+        }
+
+        private void AddHandToWinningHandsList(double currentHandType, double handPower, double currentHandTypeValue)
+        {
+            currentHandType = currentHandTypeValue;
+            WinningHands.Add(new HandType()
+            {
+                HandPower = handPower,
+                HandValue = currentHandTypeValue
+            });
+            highestHand = WinningHands
+                .OrderByDescending(op => op.HandValue)
+                .ThenByDescending(op => op.HandPower)
+                .First();
         }
 
         void Winner(IPlayer gamePlayer, string lastly)
@@ -1592,145 +1175,139 @@ namespace Poker
             {
                 lastly = "Bot 5";
             }
-            for (int j = 0; j <= 16; j++)
+            for (int dealthCardsIndex = 0; dealthCardsIndex <= 16; dealthCardsIndex++)
             {
                 //await Task.Delay(5);
-                if (cardImageHolder[j].Visible)
-                    cardImageHolder[j].Image = cardDeck[j];
-            }
-            if (gamePlayer.HandType == sorted.Current)
-            {
-                if (gamePlayer.HandPower == sorted.Power)
+                if (cardImageHolder[dealthCardsIndex].Visible)
                 {
-                    winnersCount++;
-                    CheckWinners.Add(gamePlayer.Name);
-                    if (gamePlayer.HandType == -1)
-                    {
-                        MessageBox.Show(gamePlayer.Name + " High Card ");
-                    }
-                    if (gamePlayer.HandType == 1 || gamePlayer.HandType == 0)
-                    {
-                        MessageBox.Show(gamePlayer.Name + " Pair ");
-                    }
-                    if (gamePlayer.HandType == 2)
-                    {
-                        MessageBox.Show(gamePlayer.Name + " Two Pair ");
-                    }
-                    if (gamePlayer.HandType == 3)
-                    {
-                        MessageBox.Show(gamePlayer.Name + " Three of a Kind ");
-                    }
-                    if (gamePlayer.HandType == 4)
-                    {
-                        MessageBox.Show(gamePlayer.Name + " Straight ");
-                    }
-                    if (gamePlayer.HandType == 5 || gamePlayer.HandType == 5.5)
-                    {
-                        MessageBox.Show(gamePlayer.Name + " Flush ");
-                    }
-                    if (gamePlayer.HandType == 6)
-                    {
-                        MessageBox.Show(gamePlayer.Name + " Full House ");
-                    }
-                    if (gamePlayer.HandType == 7)
-                    {
-                        MessageBox.Show(gamePlayer.Name + " Four of a Kind ");
-                    }
-                    if (gamePlayer.HandType == 8)
-                    {
-                        MessageBox.Show(gamePlayer.Name + " Straight Flush ");
-                    }
-                    if (gamePlayer.HandType == 9)
-                    {
-                        MessageBox.Show(gamePlayer.Name + " Royal Flush ! ");
-                    }
+                    cardImageHolder[dealthCardsIndex].Image = cardDeck[dealthCardsIndex];
                 }
             }
+            if (gamePlayer.HandType == highestHand.HandValue && gamePlayer.HandPower == highestHand.HandPower)
+            {
+                winnersCount++;
+                candidateWinners.Add(gamePlayer.Name);
+                ShowPlayerWinningHandMessage(gamePlayer);
+            }
+
             if (gamePlayer.Name == lastly)//lastfixed
             {
                 if (winnersCount > 1)
                 {
-                    if (CheckWinners.Contains("Player"))
+                    if (candidateWinners.Contains("Player"))
                     {
                         player.Chips += int.Parse(potTextBox.Text) / winnersCount;
                         playerChipsTextBox.Text = player.Chips.ToString();
-                        //pPanel.Visible = true;
-
                     }
-                    if (CheckWinners.Contains("Bot 1"))
+
+                    if (candidateWinners.Contains("Bot 1"))
                     {
                         bot1.Chips += int.Parse(potTextBox.Text) / winnersCount;
                         bot1ChipsTextBox.Text = bot1.Chips.ToString();
-                        //b1Panel.Visible = true;
                     }
-                    if (CheckWinners.Contains("Bot 2"))
+
+                    if (candidateWinners.Contains("Bot 2"))
                     {
                         bot2.Chips += int.Parse(potTextBox.Text) / winnersCount;
                         bot2ChipsTextBox.Text = bot2.Chips.ToString();
-                        //b2Panel.Visible = true;
                     }
-                    if (CheckWinners.Contains("Bot 3"))
+
+                    if (candidateWinners.Contains("Bot 3"))
                     {
                         bot3.Chips += int.Parse(potTextBox.Text) / winnersCount;
                         bot3ChipsTextBox.Text = bot3.Chips.ToString();
-                        //b3Panel.Visible = true;
                     }
-                    if (CheckWinners.Contains("Bot 4"))
+
+                    if (candidateWinners.Contains("Bot 4"))
                     {
                         bot4.Chips += int.Parse(potTextBox.Text) / winnersCount;
                         bot4ChipsTextBox.Text = bot4.Chips.ToString();
-                        //b4Panel.Visible = true;
                     }
-                    if (CheckWinners.Contains("Bot 5"))
+
+                    if (candidateWinners.Contains("Bot 5"))
                     {
                         bot5.Chips += int.Parse(potTextBox.Text) / winnersCount;
                         bot5ChipsTextBox.Text = bot5.Chips.ToString();
-                        //b5Panel.Visible = true;
                     }
-                    //await Finish(1);
                 }
+
                 if (winnersCount == 1)
                 {
-                    if (CheckWinners.Contains("Player"))
+                    if (candidateWinners.Contains("Player"))
                     {
                         player.Chips += int.Parse(potTextBox.Text);
-                        //await Finish(1);
-                        //pPanel.Visible = true;
-                    }
-                    if (CheckWinners.Contains("Bot 1"))
+                        }
+
+                    if (candidateWinners.Contains("Bot 1"))
                     {
                         bot1.Chips += int.Parse(potTextBox.Text);
-                        //await Finish(1);
-                        //b1Panel.Visible = true;
-                    }
-                    if (CheckWinners.Contains("Bot 2"))
+                        }
+
+                    if (candidateWinners.Contains("Bot 2"))
                     {
                         bot2.Chips += int.Parse(potTextBox.Text);
-                        //await Finish(1);
-                        //b2Panel.Visible = true;
+                        }
 
-                    }
-                    if (CheckWinners.Contains("Bot 3"))
+                    if (candidateWinners.Contains("Bot 3"))
                     {
                         bot3.Chips += int.Parse(potTextBox.Text);
-                        //await Finish(1);
-                        //b3Panel.Visible = true;
-                    }
-                    if (CheckWinners.Contains("Bot 4"))
+                        }
+
+                    if (candidateWinners.Contains("Bot 4"))
                     {
                         bot4.Chips += int.Parse(potTextBox.Text);
-                        //await Finish(1);
-                        //b4Panel.Visible = true;
-                    }
-                    if (CheckWinners.Contains("Bot 5"))
+                        }
+
+                    if (candidateWinners.Contains("Bot 5"))
                     {
                         bot5.Chips += int.Parse(potTextBox.Text);
-                        //await Finish(1);
-                        //b5Panel.Visible = true;
-                    }
+                        }
                 }
             }
         }
+
+        private static void ShowPlayerWinningHandMessage(IPlayer gamePlayer)
+        {
+            switch ((int) gamePlayer.HandType)
+            {
+                case -1:
+                    MessageBox.Show(gamePlayer.Name + " High Card ");
+                    break;
+                case 0:
+                    MessageBox.Show(gamePlayer.Name + " Pair ");
+                    break;
+                case 1:
+                    MessageBox.Show(gamePlayer.Name + " Pair ");
+                    break;
+                case 2:
+                    MessageBox.Show(gamePlayer.Name + " Two Pair ");
+                    break;
+                case 3:
+                    MessageBox.Show(gamePlayer.Name + " Three of a Kind ");
+                    break;
+                case 4:
+                    MessageBox.Show(gamePlayer.Name + " tableAndPlayerCards ");
+                    break;
+                case 5:
+                    MessageBox.Show(gamePlayer.Name + " Flush ");
+                    break;
+                case 6:
+                    MessageBox.Show(gamePlayer.Name + " Full House ");
+                    break;
+                case 7:
+                    MessageBox.Show(gamePlayer.Name + " Four of a Kind ");
+                    break;
+                case 8:
+                    MessageBox.Show(gamePlayer.Name + " tableAndPlayerCards Flush ");
+                    break;
+                case 9:
+                    MessageBox.Show(gamePlayer.Name + " Royal Flush ! ");
+                    break;
+                default:
+                    break;
+            }
+        }
+
         async Task CheckRaise(int currentTurn, int raiseTurn)
         {
             if (raising)
@@ -1915,11 +1492,11 @@ namespace Poker
                 bot4.HandType = -1;
                 bot5.HandType = -1;
                 ints.Clear();
-                CheckWinners.Clear();
+                candidateWinners.Clear();
                 winnersCount = 0;
-                Win.Clear();
-                sorted.Current = 0;
-                sorted.Power = 0;
+                WinningHands.Clear();
+                highestHand.HandValue = 0;
+                highestHand.HandPower = 0;
                 for (int os = 0; os < 17; os++)
                 {
                     cardImageHolder[os].Image = null;
@@ -1927,11 +1504,12 @@ namespace Poker
                     cardImageHolder[os].Visible = false;
                 }
                 potTextBox.Text = "0";
-                player.Status.Text = "";
+                player.Status.Text = String.Empty;
                 await Shuffle();
                 await Turns();
             }
         }
+
         void FixCall(IPlayer gamePlayer, int options)
         {
             if (rounds != 4)
@@ -2152,11 +1730,11 @@ namespace Poker
             height = 0; width = 0; winnersCount = 0; Flop = 1; Turn = 2; River = 3; End = 4; maxLeft = 6;
             last = 123; raisedTurn = 1;
             allPlayersIsActiveCollection.Clear();
-            CheckWinners.Clear();
+            candidateWinners.Clear();
             ints.Clear();
-            Win.Clear();
-            sorted.Current = 0;
-            sorted.Power = 0;
+            WinningHands.Clear();
+            highestHand.HandValue = 0;
+            highestHand.HandPower = 0;
             potTextBox.Text = "0";
             t = 60; up = 10000000; turnCount = 0;
             playerStatus.Text = "";
@@ -2197,9 +1775,9 @@ namespace Poker
         }
         void FixWinners()
         {
-            Win.Clear();
-            sorted.Current = 0;
-            sorted.Power = 0;
+            WinningHands.Clear();
+            highestHand.HandValue = 0;
+            highestHand.HandPower = 0;
             string fixedLast = "qwerty";
             if (!playerStatus.Text.Contains("Fold"))
             {
@@ -2381,7 +1959,7 @@ namespace Poker
             Random flh = new Random();
             int fhCall = flh.Next(1, 5);
             int fhRaise = flh.Next(2, 6);
-            if (gamePlayer.HandPower <= 626 && gamePlayer.HandPower>= 620)
+            if (gamePlayer.HandPower <= 626 && gamePlayer.HandPower >= 620)
             {
                 Smooth(gamePlayer, fhCall, fhRaise);
             }
